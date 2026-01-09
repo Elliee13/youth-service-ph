@@ -3,6 +3,8 @@ import { Card } from "../components/ui/Card";
 import { Section } from "../components/ui/Section";
 import { Container } from "../components/ui/Container";
 import { useGsapReveal } from "../hooks/useGsapReveal";
+import { useParams, Link } from "react-router-dom";
+import { Button } from "../components/ui/Button";
 
 const chapters = [
   { name: "NCR Chapter", location: "Metro Manila" },
@@ -19,7 +21,6 @@ export default function MembershipChapter() {
     <div ref={scope}>
       <section className="relative overflow-hidden py-12 sm:py-16">
         <div className="absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-[radial-gradient(70%_55%_at_85%_0%,rgba(2,6,23,0.07),transparent_55%)]" />
           <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.00),rgba(255,255,255,0.92))]" />
         </div>
         <Container>
@@ -111,6 +112,38 @@ export default function MembershipChapter() {
                 ))}
               </div>
             </Card>
+          </div>
+        </div>
+      </Section>
+
+      {/* ================= NEXT STEP ================= */}
+      <Section
+        eyebrow="Get involved"
+        title="Turn intent into action"
+        description="Discover volunteer opportunities led by local chapters and take part in work that creates real impact."
+      >
+        <div
+          data-reveal
+          className="mt-10 rounded-3xl border border-black/10 bg-[rgb(var(--card))] p-8 sm:p-10"
+        >
+          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
+            Next step
+          </div>
+
+          <div className="mt-3 [font-family:var(--font-display)] text-3xl tracking-[-0.02em] sm:text-4xl">
+            Start with one opportunity.
+          </div>
+
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-black/65">
+            Browse opportunities by chapter and connect directly with chapter heads to join.
+          </p>
+
+          <div className="mt-6">
+            <Link to="/volunteer-opportunities">
+              <Button size="lg" className="accent-glow">
+                Browse Opportunities
+              </Button>
+            </Link>
           </div>
         </div>
       </Section>

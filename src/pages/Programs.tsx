@@ -1,43 +1,43 @@
 import { Link } from "react-router-dom";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card } from "../components/ui/Card";
 import { Section } from "../components/ui/Section";
 import { Container } from "../components/ui/Container";
 import { useGsapReveal } from "../hooks/useGsapReveal";
+import { listPrograms, type Program } from "../lib/public.api";
+import { Button } from "../components/ui/Button";
 
-const programs = [
-  {
-    id: "leadership",
-    title: "Youth Leadership & Civic Training",
-    description: "Leadership tracks designed for service-ready youth leaders.",
-    image:
-      "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=75",
-  },
-  {
-    id: "community",
-    title: "Community Service Missions",
-    description: "Volunteer missions with measurable outcomes led by chapters.",
-    image:
-      "https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?auto=format&fit=crop&w=1600&q=75",
-  },
-  {
-    id: "sdg",
-    title: "SDG Action Projects",
-    description: "Programs aligned with SDGs for meaningful, trackable impact.",
-    image:
-      "https://images.unsplash.com/photo-1520975958225-9c87e8e8a2c5?auto=format&fit=crop&w=1600&q=75",
-  },
-];
+const FALLBACK_PROGRAM_IMAGE =
+  "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=75";
 
 export default function Programs() {
   const scope = useRef<HTMLDivElement | null>(null);
   useGsapReveal(scope);
 
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const p = await listPrograms();
+        if (!alive) return;
+        setPrograms(p);
+      } catch (e: any) {
+        if (!alive) return;
+        setError(e?.message ?? "Failed to load programs.");
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   return (
     <div ref={scope}>
       <section className="relative overflow-hidden py-12 sm:py-16">
         <div className="absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-[radial-gradient(70%_55%_at_85%_0%,rgba(2,6,23,0.07),transparent_55%)]" />
           <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.00),rgba(255,255,255,0.92))]" />
         </div>
 
@@ -59,6 +59,12 @@ export default function Programs() {
             >
               A curated set of initiatives designed for clarity, momentum, and scale across chapters.
             </p>
+
+            {error ? (
+              <div className="mt-6 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            ) : null}
           </div>
         </Container>
       </section>
@@ -75,7 +81,7 @@ export default function Programs() {
                 <div className="relative aspect-[16/10] overflow-hidden">
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-black/0 to-black/0 opacity-70 transition-opacity duration-300 group-hover:opacity-85" />
                   <img
-                    src={p.image}
+                    src={p.image_url ?? FALLBACK_PROGRAM_IMAGE}
                     alt={p.title}
                     className="h-full w-full object-cover transition-transform duration-500 will-change-transform group-hover:scale-[1.05]"
                     loading="lazy"
@@ -100,6 +106,38 @@ export default function Programs() {
               </Card>
             </Link>
           ))}
+        </div>
+      </Section>
+
+     {/* ================= NEXT STEP ================= */}
+      <Section
+        eyebrow="Get involved"
+        title="Turn intent into action"
+        description="Discover volunteer opportunities led by local chapters and take part in work that creates real impact."
+      >
+        <div
+          data-reveal
+          className="mt-10 rounded-3xl border border-black/10 bg-[rgb(var(--card))] p-8 sm:p-10"
+        >
+          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
+            Next step
+          </div>
+
+          <div className="mt-3 [font-family:var(--font-display)] text-3xl tracking-[-0.02em] sm:text-4xl">
+            Start with one opportunity.
+          </div>
+
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-black/65">
+            Browse opportunities by chapter and connect directly with chapter heads to join.
+          </p>
+
+          <div className="mt-6">
+            <Link to="/volunteer-opportunities">
+              <Button size="lg" className="accent-glow">
+                Browse Opportunities
+              </Button>
+            </Link>
+          </div>
         </div>
       </Section>
     </div>

@@ -1,46 +1,75 @@
+import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useRef } from "react";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Container } from "../components/ui/Container";
 import { useGsapReveal } from "../hooks/useGsapReveal";
+import { getProgramById, type Program } from "../lib/public.api";
 
-const programById: Record<
-  string,
-  { title: string; description: string; image: string; body: string }
-> = {
-  leadership: {
-    title: "Youth Leadership & Civic Training",
-    description: "Leadership tracks designed for service-ready youth leaders.",
-    image:
-      "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=2000&q=75",
-    body:
-      "This program equips members with civic competence, leadership discipline, and community facilitation skills. Chapters can adopt modules and run cohorts locally.",
-  },
-  community: {
-    title: "Community Service Missions",
-    description: "Volunteer missions with measurable outcomes led by chapters.",
-    image:
-      "https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?auto=format&fit=crop&w=2000&q=75",
-    body:
-      "Chapters coordinate service missions with clear goals, roles, and reporting. Designed for repeatable impact and sustained community relationships.",
-  },
-  sdg: {
-    title: "SDG Action Projects",
-    description: "Programs aligned with SDGs for meaningful, trackable impact.",
-    image:
-      "https://images.unsplash.com/photo-1520975958225-9c87e8e8a2c5?auto=format&fit=crop&w=2000&q=75",
-    body:
-      "A structured approach to identify SDGs impacted, plan initiatives, and measure outcomes over time—ideal for chapter portfolios and partnerships.",
-  },
-};
+const FALLBACK_PROGRAM_IMAGE =
+  "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=2000&q=75";
 
 export default function ProgramDetail() {
   const { id } = useParams();
-  const program = (id && programById[id]) || null;
-
   const scope = useRef<HTMLDivElement | null>(null);
   useGsapReveal(scope);
+
+  const [program, setProgram] = useState<Program | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      if (!id) {
+        setLoading(false);
+        setProgram(null);
+        return;
+      }
+      try {
+        const p = await getProgramById(id);
+        if (!alive) return;
+        setProgram(p);
+      } catch (e: any) {
+        if (!alive) return;
+        setError(e?.message ?? "Failed to load program.");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [id]);
+
+  if (loading) {
+    return (
+      <Container>
+        <div className="py-16">
+          <div className="h-8 w-80 rounded bg-black/5" />
+          <div className="mt-4 h-4 w-[28rem] rounded bg-black/5" />
+          <div className="mt-10 h-64 w-full rounded-3xl bg-black/5" />
+        </div>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container>
+        <div className="py-16">
+          <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+          <div className="mt-6">
+            <Link to="/programs">
+              <Button variant="secondary">Back to Programs</Button>
+            </Link>
+          </div>
+        </div>
+      </Container>
+    );
+  }
 
   if (!program) {
     return (
@@ -49,9 +78,7 @@ export default function ProgramDetail() {
           <div className="[font-family:var(--font-display)] text-3xl tracking-[-0.02em]">
             Program not found
           </div>
-          <p className="mt-3 text-sm text-black/65">
-            The program you’re looking for may not exist.
-          </p>
+          <p className="mt-3 text-sm text-black/65">The program you’re looking for may not exist.</p>
           <div className="mt-6">
             <Link to="/programs">
               <Button variant="secondary">Back to Programs</Button>
@@ -96,7 +123,7 @@ export default function ProgramDetail() {
           <div className="relative aspect-[16/7] overflow-hidden">
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/0 to-black/0 opacity-70" />
             <img
-              src={program.image}
+              src={program.image_url ?? FALLBACK_PROGRAM_IMAGE}
               alt={program.title}
               className="h-full w-full object-cover"
               loading="lazy"
@@ -111,22 +138,18 @@ export default function ProgramDetail() {
               data-reveal
               className="mt-4 max-w-3xl text-[15px] leading-7 text-black/65 sm:text-base sm:leading-8"
             >
-              {program.body}
+              {program.description}
             </p>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
               <div data-reveal className="rounded-2xl border border-black/10 bg-[rgb(var(--card))] p-5">
-                <div className="text-xs font-semibold text-black/70">
-                  Designed for chapter delivery
-                </div>
+                <div className="text-xs font-semibold text-black/70">Designed for chapter delivery</div>
                 <p className="mt-2 text-xs leading-5 text-black/60">
                   Structured so chapters can repeat the program locally while keeping quality consistent.
                 </p>
               </div>
               <div data-reveal className="rounded-2xl border border-black/10 bg-[rgb(var(--card))] p-5">
-                <div className="text-xs font-semibold text-black/70">
-                  SDG-aligned outcomes
-                </div>
+                <div className="text-xs font-semibold text-black/70">SDG-aligned outcomes</div>
                 <p className="mt-2 text-xs leading-5 text-black/60">
                   Clear goals and reporting help volunteers understand impact and stay engaged.
                 </p>
@@ -136,9 +159,7 @@ export default function ProgramDetail() {
         </Card>
 
         <div data-reveal className="mt-10 rounded-3xl border border-black/10 bg-[rgb(var(--card))] p-8 sm:p-10">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
-            Next step
-          </div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">Next step</div>
           <div className="mt-3 [font-family:var(--font-display)] text-3xl tracking-[-0.02em] sm:text-4xl">
             Start with one opportunity.
           </div>

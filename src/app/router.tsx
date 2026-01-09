@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import { SiteLayout } from "../components/layout/SiteLayout";
 import RouteError from "./RouteError";
+import { RequireRole } from "../auth/RequireRole";
 
 function withSuspense(node: React.ReactNode) {
   return (
@@ -42,8 +43,23 @@ export const router = createBrowserRouter([
       { path: "/contact", element: withSuspense(<Contact />) },
 
       { path: "/sign-in", element: withSuspense(<SignIn />) },
-      { path: "/admin", element: withSuspense(<AdminDashboard />) },
-      { path: "/chapter-head", element: withSuspense(<ChapterHeadDashboard />) },
+
+      {
+        path: "/admin",
+        element: withSuspense(
+          <RequireRole role="admin">
+            <AdminDashboard />
+          </RequireRole>
+        ),
+      },
+      {
+        path: "/chapter-head",
+        element: withSuspense(
+          <RequireRole role="chapter_head">
+            <ChapterHeadDashboard />
+          </RequireRole>
+        ),
+      },
     ],
   },
 ]);

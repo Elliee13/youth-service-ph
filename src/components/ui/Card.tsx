@@ -21,6 +21,6 @@ export function Card({
       )}
     >
       {children}
-    </div>
+    </div> 
   );
 }

@@ -1,12 +1,37 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card } from "../components/ui/Card";
 import { Section } from "../components/ui/Section";
 import { Container } from "../components/ui/Container";
 import { useGsapReveal } from "../hooks/useGsapReveal";
+import { getSiteSettings, type SiteSettings } from "../lib/public.api";
 
 export default function Contact() {
   const scope = useRef<HTMLDivElement | null>(null);
   useGsapReveal(scope);
+
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const s = await getSiteSettings();
+        if (!alive) return;
+        setSettings(s);
+      } catch (e: any) {
+        if (!alive) return;
+        setError(e?.message ?? "Failed to load contact details.");
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const email = settings?.contact_email ?? "phyouthservice@gmail.com";
+  const facebook = settings?.contact_facebook ?? "https://www.facebook.com/YOUTHSERVICEPHILIPPINES";
+  const mobile = settings?.contact_mobile ?? "09177798413";
 
   return (
     <div ref={scope}>
@@ -34,6 +59,12 @@ export default function Contact() {
             >
               Reach out for partnerships, chapter support, or volunteer coordination.
             </p>
+
+            {error ? (
+              <div className="mt-6 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            ) : null}
           </div>
         </Container>
       </section>
@@ -45,26 +76,22 @@ export default function Contact() {
       >
         <div className="grid gap-5 md:grid-cols-3">
           <Card data-reveal className="border-black/10 bg-white p-6 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_50px_rgba(2,6,23,0.10)]">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
-              Email
-            </div>
-            <div className="mt-3 text-sm font-semibold">phyouthservice@gmail.com</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">Email</div>
+            <div className="mt-3 text-sm font-semibold">{email}</div>
             <a
               className="mt-3 inline-flex items-center gap-2 text-sm text-[rgb(var(--accent))] hover:underline"
-              href="mailto:phyouthservice@gmail.com"
+              href={`mailto:${email}`}
             >
               Send an email <span aria-hidden="true">→</span>
             </a>
           </Card>
 
           <Card data-reveal className="border-black/10 bg-white p-6 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_50px_rgba(2,6,23,0.10)]">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
-              Facebook
-            </div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">Facebook</div>
             <div className="mt-3 text-sm font-semibold">Youth Service Philippines</div>
             <a
               className="mt-3 inline-flex items-center gap-2 text-sm text-[rgb(var(--accent))] hover:underline"
-              href="https://www.facebook.com/YOUTHSERVICEPHILIPPINES"
+              href={facebook}
               target="_blank"
               rel="noreferrer"
             >
@@ -73,13 +100,11 @@ export default function Contact() {
           </Card>
 
           <Card data-reveal className="border-black/10 bg-white p-6 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_50px_rgba(2,6,23,0.10)]">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
-              Mobile
-            </div>
-            <div className="mt-3 text-sm font-semibold">09177798413</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">Mobile</div>
+            <div className="mt-3 text-sm font-semibold">{mobile}</div>
             <a
               className="mt-3 inline-flex items-center gap-2 text-sm text-[rgb(var(--accent))] hover:underline"
-              href="tel:+639177798413"
+              href={`tel:${mobile.startsWith("+") ? mobile : "+63" + mobile.replace(/^0/, "")}`}
             >
               Call now <span aria-hidden="true">→</span>
             </a>
