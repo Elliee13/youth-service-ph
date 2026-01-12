@@ -3,7 +3,7 @@ import { Card } from "../components/ui/Card";
 import { Section } from "../components/ui/Section";
 import { Container } from "../components/ui/Container";
 import { useGsapReveal } from "../hooks/useGsapReveal";
-import { useParams, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 
 const chapters = [
