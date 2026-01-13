@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Card } from "../components/ui/Card";
 import { Section } from "../components/ui/Section";
 import { Container } from "../components/ui/Container";
+import { Button } from "../components/ui/Button";
 import { useGsapReveal } from "../hooks/useGsapReveal";
 import { listVolunteerOpportunities, type VolunteerOpportunity } from "../lib/public.api";
+import { SignUpModal } from "../components/volunteer/SignUpModal";
 
 export default function VolunteerOpportunities() {
   const scope = useRef<HTMLDivElement | null>(null);
@@ -11,6 +13,10 @@ export default function VolunteerOpportunities() {
 
   const [items, setItems] = useState<VolunteerOpportunity[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [signUpModal, setSignUpModal] = useState<{
+    opportunity: VolunteerOpportunity;
+  } | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -105,11 +111,53 @@ export default function VolunteerOpportunities() {
                   Sign up
                 </div>
                 <div className="mt-2 text-sm leading-6 text-black/65">{o.contact_details}</div>
+                <div className="mt-4">
+                  <Button
+                    size="sm"
+                    className="accent-glow"
+                    onClick={() => setSignUpModal({ opportunity: o })}
+                  >
+                    Sign Up Now
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}
         </div>
       </Section>
+
+      {/* Sign Up Modal */}
+      {signUpModal ? (
+        <SignUpModal
+          opportunityId={signUpModal.opportunity.id}
+          opportunityName={signUpModal.opportunity.event_name}
+          opportunityDate={signUpModal.opportunity.event_date}
+          chapterName={signUpModal.opportunity.chapter?.name ?? null}
+          onClose={() => {
+            setSignUpModal(null);
+            setSuccessMessage(null);
+          }}
+          onSuccess={() => {
+            setSuccessMessage(
+              `Successfully signed up for ${signUpModal.opportunity.event_name}! The chapter head will contact you soon.`
+            );
+          }}
+        />
+      ) : null}
+
+      {/* Success Message Toast */}
+      {successMessage ? (
+        <div className="fixed bottom-6 right-6 z-50 max-w-md rounded-2xl border border-green-500/20 bg-green-500/10 px-4 py-3 text-sm text-green-700 shadow-lg">
+          <div className="font-semibold">Success!</div>
+          <div className="mt-1">{successMessage}</div>
+          <button
+            onClick={() => setSuccessMessage(null)}
+            className="mt-2 text-xs text-green-600 hover:underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

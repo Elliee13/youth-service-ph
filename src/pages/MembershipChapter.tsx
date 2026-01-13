@@ -1,21 +1,37 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card } from "../components/ui/Card";
 import { Section } from "../components/ui/Section";
 import { Container } from "../components/ui/Container";
 import { useGsapReveal } from "../hooks/useGsapReveal";
 import { Link } from "react-router-dom";
 import { Button } from "../components/ui/Button";
-
-const chapters = [
-  { name: "NCR Chapter", location: "Metro Manila" },
-  { name: "North Luzon Chapter", location: "Luzon" },
-  { name: "Visayas Chapter", location: "Visayas" },
-  { name: "Mindanao Chapter", location: "Mindanao" },
-];
+import { listChapters, type Chapter } from "../lib/public.api";
 
 export default function MembershipChapter() {
   const scope = useRef<HTMLDivElement | null>(null);
   useGsapReveal(scope);
+
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const c = await listChapters();
+        if (!alive) return;
+        setChapters(c);
+      } catch (e: any) {
+        if (!alive) return;
+        console.warn("[MembershipChapter] listChapters failed:", e);
+        setError(e?.message ?? "Failed to load chapters.");
+        setChapters([]);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   return (
     <div ref={scope}>
@@ -95,22 +111,30 @@ export default function MembershipChapter() {
               <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
                 Chapters
               </div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                {chapters.map((c) => (
-                  <div
-                    key={c.name}
-                    data-reveal
-                    className="group rounded-2xl border border-black/10 bg-white/75 p-4 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_50px_rgba(2,6,23,0.10)]"
-                  >
-                    <div className="text-sm font-semibold">{c.name}</div>
-                    <div className="mt-1 text-sm text-black/60">{c.location}</div>
-                    <div className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-black/60">
-                      <span className="size-1.5 rounded-full bg-[rgb(var(--accent))]" />
-                      View opportunities
+              {error ? (
+                <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
+                  {error}
+                </div>
+              ) : chapters.length === 0 ? (
+                <div className="mt-4 text-sm text-black/60">No chapters available yet.</div>
+              ) : (
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {chapters.map((c) => (
+                    <div
+                      key={c.id}
+                      data-reveal
+                      className="group rounded-2xl border border-black/10 bg-white/75 p-4 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_50px_rgba(2,6,23,0.10)]"
+                    >
+                      <div className="text-sm font-semibold">{c.name}</div>
+                      <div className="mt-1 text-sm text-black/60">{c.location ?? "Philippines"}</div>
+                      <div className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-black/60">
+                        <span className="size-1.5 rounded-full bg-[rgb(var(--accent))]" />
+                        View opportunities
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </Card>
           </div>
         </div>

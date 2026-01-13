@@ -103,3 +103,23 @@ export async function listVolunteerOpportunities(limit?: number): Promise<Volunt
   if (error) logAndThrow("listVolunteerOpportunities", error);
   return (data ?? []) as unknown as VolunteerOpportunity[];
 }
+
+export type VolunteerSignupInput = {
+  opportunity_id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  message?: string;
+};
+
+export async function signUpForOpportunity(input: VolunteerSignupInput): Promise<void> {
+  const { error } = await supabase.from("volunteer_signups").insert({
+    opportunity_id: input.opportunity_id,
+    full_name: input.full_name,
+    email: input.email,
+    phone: input.phone,
+    message: input.message || null,
+  });
+
+  if (error) logAndThrow("signUpForOpportunity", error);
+}
