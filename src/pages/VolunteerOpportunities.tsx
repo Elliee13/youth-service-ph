@@ -38,7 +38,9 @@ export default function VolunteerOpportunities() {
         setItems(data);
       } catch (e: any) {
         if (!alive) return;
-        setError(e?.message ?? "Failed to load opportunities.");
+        const msg = e?.message ?? "Failed to load opportunities.";
+        setError(msg);
+        addToast({ type: "error", message: msg });
       }
     })();
     return () => {
@@ -61,7 +63,9 @@ export default function VolunteerOpportunities() {
         setMySignups(data);
       } catch (e: any) {
         if (!alive) return;
-        setMySignupsError(e?.message ?? "Failed to load your signups.");
+        const msg = e?.message ?? "Failed to load your signups.";
+        setMySignupsError(msg);
+        addToast({ type: "error", message: msg });
       }
     })();
 
@@ -109,11 +113,6 @@ export default function VolunteerOpportunities() {
               </div>
             ) : null}
 
-            {error ? (
-              <div className="mt-6 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
-                {error}
-              </div>
-            ) : null}
           </div>
         </Container>
       </section>
@@ -180,11 +179,6 @@ export default function VolunteerOpportunities() {
           title="Your signups"
           description="A quick log of the opportunities you’ve registered for."
         >
-          {mySignupsError ? (
-            <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
-              {mySignupsError}
-            </div>
-          ) : null}
 
           {!mySignupsError && mySignups.length === 0 ? (
             <div className="rounded-2xl border border-black/10 bg-white p-5 text-sm text-black/60">

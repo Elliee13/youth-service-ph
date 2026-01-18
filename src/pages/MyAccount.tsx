@@ -51,7 +51,9 @@ export default function MyAccount() {
         setPhone(data?.phone ?? "");
       } catch (e: any) {
         if (!alive) return;
-        setError(e?.message ?? "Failed to load profile.");
+        const msg = e?.message ?? "Failed to load profile.";
+        setError(msg);
+        addToast({ type: "error", message: msg });
       }
     })();
 
@@ -217,11 +219,6 @@ export default function MyAccount() {
             </div>
           </form>
 
-          {error ? (
-            <div className="mt-3 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
-          ) : null}
           {publicUser ? null : (
             <div className="mt-3 text-xs text-black/55">
               You may need to refresh after confirming your email.

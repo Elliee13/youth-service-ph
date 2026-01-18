@@ -172,12 +172,6 @@ export default function SignIn() {
                 />
               </div>
 
-              {error ? (
-                <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
-                  {error}
-                </div>
-              ) : null}
-
               <Button size="lg" className="accent-glow" disabled={busy}>
                 {busy
                   ? "Signing in…"

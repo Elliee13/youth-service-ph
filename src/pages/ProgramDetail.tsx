@@ -5,6 +5,7 @@ import { Card } from "../components/ui/Card";
 import { Container } from "../components/ui/Container";
 import { useGsapReveal } from "../hooks/useGsapReveal";
 import { getProgramById, type Program } from "../lib/public.api";
+import { useToast } from "../components/ui/ToastProvider";
 
 const FALLBACK_PROGRAM_IMAGE =
   "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=2000&q=75";
@@ -17,6 +18,7 @@ export default function ProgramDetail() {
   const [program, setProgram] = useState<Program | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   useEffect(() => {
     let alive = true;
@@ -32,7 +34,9 @@ export default function ProgramDetail() {
         setProgram(p);
       } catch (e: any) {
         if (!alive) return;
-        setError(e?.message ?? "Failed to load program.");
+        const msg = e?.message ?? "Failed to load program.";
+        setError(msg);
+        addToast({ type: "error", message: msg });
       } finally {
         if (alive) setLoading(false);
       }
@@ -58,9 +62,12 @@ export default function ProgramDetail() {
     return (
       <Container>
         <div className="py-16">
-          <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
-            {error}
+          <div className="[font-family:var(--font-display)] text-3xl tracking-[-0.02em]">
+            Unable to load program
           </div>
+          <p className="mt-3 text-sm text-black/65">
+            Please try again or return to the programs list.
+          </p>
           <div className="mt-6">
             <Link to="/programs">
               <Button variant="secondary">Back to Programs</Button>

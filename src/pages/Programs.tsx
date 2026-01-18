@@ -6,6 +6,7 @@ import { Container } from "../components/ui/Container";
 import { useGsapReveal } from "../hooks/useGsapReveal";
 import { listPrograms, type Program } from "../lib/public.api";
 import { Button } from "../components/ui/Button";
+import { useToast } from "../components/ui/ToastProvider";
 
 const FALLBACK_PROGRAM_IMAGE =
   "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=75";
@@ -16,6 +17,7 @@ export default function Programs() {
 
   const [programs, setPrograms] = useState<Program[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   useEffect(() => {
     let alive = true;
@@ -26,7 +28,9 @@ export default function Programs() {
         setPrograms(p);
       } catch (e: any) {
         if (!alive) return;
-        setError(e?.message ?? "Failed to load programs.");
+        const msg = e?.message ?? "Failed to load programs.";
+        setError(msg);
+        addToast({ type: "error", message: msg });
       }
     })();
     return () => {
@@ -60,11 +64,6 @@ export default function Programs() {
               A curated set of initiatives designed for clarity, momentum, and scale across chapters.
             </p>
 
-            {error ? (
-              <div className="mt-6 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
-                {error}
-              </div>
-            ) : null}
           </div>
         </Container>
       </section>

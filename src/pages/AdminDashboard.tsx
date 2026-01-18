@@ -349,11 +349,6 @@ export default function AdminDashboard() {
           </div>
         </Card>
 
-        {error ? (
-          <div className="mt-6 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
-            {error}
-          </div>
-        ) : null}
 
         {/* Programs */}
         {tab === "programs" ? (

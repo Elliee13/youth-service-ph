@@ -28,7 +28,6 @@ export function SignUpModal({
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [prefillNote, setPrefillNote] = useState<string | null>(null);
   const { addToast } = useToast();
 
   useEffect(() => {
@@ -41,10 +40,8 @@ export function SignUpModal({
         setFullName((prev) => (prev.trim() ? prev : user.full_name ?? ""));
         setEmail((prev) => (prev.trim() ? prev : user.email ?? ""));
         setPhone((prev) => (prev.trim() ? prev : user.phone ?? ""));
-        setPrefillNote(user.email ? `Signed in as ${user.email}` : "Signed in");
       } catch {
         if (!alive) return;
-        setPrefillNote(null);
       }
     })();
     return () => {
@@ -115,11 +112,6 @@ export function SignUpModal({
         </div>
 
         <form onSubmit={handleSubmit} className="grid gap-4">
-          {prefillNote ? (
-            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 text-xs text-emerald-800">
-              {prefillNote}. You can edit details before submitting.
-            </div>
-          ) : null}
           <Field label="Full Name" hint="Required">
             <Input
               value={fullName}
@@ -157,12 +149,6 @@ export function SignUpModal({
               rows={4}
             />
           </Field>
-
-          {error ? (
-            <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
-          ) : null}
 
           <div className="mt-4 flex flex-wrap gap-3">
             <Button type="submit" className="accent-glow" disabled={busy}>

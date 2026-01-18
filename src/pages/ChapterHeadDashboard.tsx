@@ -126,11 +126,6 @@ export default function ChapterHeadDashboard() {
         title="Chapter Head Dashboard"
         subtitle="Create and manage volunteer opportunities for your chapter only."
       >
-        {error ? (
-          <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
-            {error}
-          </div>
-        ) : null}
 
         <div className="mt-8 grid gap-6 lg:grid-cols-12">
           <div className="lg:col-span-5">

@@ -254,17 +254,6 @@ export default function Register() {
             </Card>
           </div>
 
-          {message ? (
-            <div className="mt-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-800">
-              {message}
-            </div>
-          ) : null}
-
-          {error ? (
-            <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
-          ) : null}
         </div>
       </Container>
     </div>

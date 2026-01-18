@@ -4,6 +4,7 @@ import { Section } from "../components/ui/Section";
 import { Container } from "../components/ui/Container";
 import { useGsapReveal } from "../hooks/useGsapReveal";
 import { getSiteSettings, type SiteSettings } from "../lib/public.api";
+import { useToast } from "../components/ui/ToastProvider";
 
 export default function Contact() {
   const scope = useRef<HTMLDivElement | null>(null);
@@ -11,6 +12,7 @@ export default function Contact() {
 
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   useEffect(() => {
     let alive = true;
@@ -21,7 +23,9 @@ export default function Contact() {
         setSettings(s);
       } catch (e: any) {
         if (!alive) return;
-        setError(e?.message ?? "Failed to load contact details.");
+        const msg = e?.message ?? "Failed to load contact details.";
+        setError(msg);
+        addToast({ type: "error", message: msg });
       }
     })();
     return () => {
@@ -60,11 +64,6 @@ export default function Contact() {
               Reach out for partnerships, chapter support, or volunteer coordination.
             </p>
 
-            {error ? (
-              <div className="mt-6 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
-                {error}
-              </div>
-            ) : null}
           </div>
         </Container>
       </section>

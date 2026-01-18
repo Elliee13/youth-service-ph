@@ -6,6 +6,7 @@ import { useGsapReveal } from "../hooks/useGsapReveal";
 import { Link } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { listChapters, type Chapter } from "../lib/public.api";
+import { useToast } from "../components/ui/ToastProvider";
 
 export default function MembershipChapter() {
   const scope = useRef<HTMLDivElement | null>(null);
@@ -13,6 +14,7 @@ export default function MembershipChapter() {
 
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   useEffect(() => {
     let alive = true;
@@ -24,7 +26,9 @@ export default function MembershipChapter() {
       } catch (e: any) {
         if (!alive) return;
         console.warn("[MembershipChapter] listChapters failed:", e);
-        setError(e?.message ?? "Failed to load chapters.");
+        const msg = e?.message ?? "Failed to load chapters.";
+        setError(msg);
+        addToast({ type: "error", message: msg });
         setChapters([]);
       }
     })();
@@ -128,11 +132,7 @@ export default function MembershipChapter() {
               <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
                 Chapters
               </div>
-              {error ? (
-                <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
-                  {error}
-                </div>
-              ) : chapters.length === 0 ? (
+              {chapters.length === 0 ? (
                 <div className="mt-4 text-sm text-black/60">No chapters available yet.</div>
               ) : (
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">

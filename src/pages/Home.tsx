@@ -65,7 +65,9 @@ export default function Home() {
       }
 
       if (s.status === "rejected" && p.status === "rejected" && c.status === "rejected") {
-        setError("Failed to load homepage content. Please refresh.");
+        const msg = "Failed to load homepage content. Please refresh.";
+        setError(msg);
+        addToast({ type: "error", message: msg });
       }
     })();
 
@@ -181,11 +183,6 @@ export default function Home() {
                 <Stat label="Members" value={stats.members} />
               </div>
 
-              {error ? (
-                <div className="mx-auto mt-6 max-w-2xl rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
-                  {error}
-                </div>
-              ) : null}
             </div>
           </Container>
         </section>
