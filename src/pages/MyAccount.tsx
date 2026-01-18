@@ -85,6 +85,18 @@ export default function MyAccount() {
     }
   }, [params, setParams]);
 
+  useEffect(() => {
+    if (!user) return;
+    const notice = localStorage.getItem("ysp_auth_notice");
+    if (!notice) return;
+    if (notice === "welcome") {
+      setSuccess("Welcome! Your volunteer account is ready.");
+    } else if (notice === "signed_in") {
+      setSuccess("Signed in successfully.");
+    }
+    localStorage.removeItem("ysp_auth_notice");
+  }, [user]);
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);

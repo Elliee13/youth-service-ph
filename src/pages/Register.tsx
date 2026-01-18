@@ -39,6 +39,7 @@ export default function Register() {
       if (signUpError) throw signUpError;
 
       if (data.session) {
+        localStorage.setItem("ysp_auth_notice", "welcome");
         navigate("/my-account?welcome=1", { replace: true });
         return;
       }
@@ -63,6 +64,7 @@ export default function Register() {
         password: signInPassword,
       });
       if (signInError) throw signInError;
+      localStorage.setItem("ysp_auth_notice", "signed_in");
       navigate("/my-account?signed_in=1", { replace: true });
     } catch (err: any) {
       setError(err?.message ?? "Sign-in failed.");
@@ -77,10 +79,11 @@ export default function Register() {
     setMessage(null);
 
     try {
+      localStorage.setItem("ysp_auth_notice", "signed_in");
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/my-account`,
+          redirectTo: `${window.location.origin}/my-account?signed_in=1`,
         },
       });
       if (oauthError) throw oauthError;
