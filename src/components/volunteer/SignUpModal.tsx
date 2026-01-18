@@ -3,6 +3,7 @@ import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { Field, Input, Textarea } from "../cms/Field";
 import { getMyPublicUser, type VolunteerSignupInput } from "../../lib/public.api";
+import { useToast } from "../ui/ToastProvider";
 
 type Props = {
   opportunityId: string;
@@ -28,6 +29,7 @@ export function SignUpModal({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [prefillNote, setPrefillNote] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   useEffect(() => {
     let alive = true;
@@ -57,7 +59,9 @@ export function SignUpModal({
 
     try {
       if (!fullName.trim() || !email.trim() || !phone.trim()) {
-        setError("Please fill in all required fields.");
+        const msg = "Please fill in all required fields.";
+        setError(msg);
+        addToast({ type: "error", message: msg });
         return;
       }
 
@@ -75,7 +79,9 @@ export function SignUpModal({
       onSuccess();
       onClose();
     } catch (e: any) {
-      setError(e?.message ?? "Failed to sign up. Please try again.");
+      const msg = e?.message ?? "Failed to sign up. Please try again.";
+      setError(msg);
+      addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
     }

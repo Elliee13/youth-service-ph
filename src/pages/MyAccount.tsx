@@ -4,6 +4,7 @@ import { Card } from "../components/ui/Card";
 import { Container } from "../components/ui/Container";
 import { Section } from "../components/ui/Section";
 import { Button } from "../components/ui/Button";
+import { useToast } from "../components/ui/ToastProvider";
 import { useGsapReveal } from "../hooks/useGsapReveal";
 import { useAuth } from "../auth/AuthProvider";
 import {
@@ -26,7 +27,7 @@ export default function MyAccount() {
   const [signups, setSignups] = useState<VolunteerSignup[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -67,18 +68,21 @@ export default function MyAccount() {
 
   useEffect(() => {
     if (params.get("welcome") === "1") {
-      setSuccess("Welcome! Your volunteer account is ready.");
+      addToast({ type: "success", message: "Welcome! Your volunteer account is ready." });
       params.delete("welcome");
       setParams(params, { replace: true });
     }
     if (params.get("signed_in") === "1") {
-      setSuccess("Signed in successfully.");
+      addToast({ type: "success", message: "Signed in successfully." });
       params.delete("signed_in");
       setParams(params, { replace: true });
     }
     if (params.get("error") || params.get("error_description")) {
       const description = params.get("error_description") || params.get("error");
-      setError(description ? decodeURIComponent(description) : "Sign-in failed.");
+      addToast({
+        type: "error",
+        message: description ? decodeURIComponent(description) : "Sign-in failed.",
+      });
       params.delete("error");
       params.delete("error_description");
       setParams(params, { replace: true });
@@ -90,18 +94,17 @@ export default function MyAccount() {
     const notice = localStorage.getItem("ysp_auth_notice");
     if (!notice) return;
     if (notice === "welcome") {
-      setSuccess("Welcome! Your volunteer account is ready.");
+      addToast({ type: "success", message: "Welcome! Your volunteer account is ready." });
     } else if (notice === "signed_in") {
-      setSuccess("Signed in successfully.");
+      addToast({ type: "success", message: "Signed in successfully." });
     }
     localStorage.removeItem("ysp_auth_notice");
-  }, [user]);
+  }, [user, addToast]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    setSuccess(null);
 
     try {
       await updateMyPublicUser({
@@ -109,9 +112,10 @@ export default function MyAccount() {
         email: email.trim(),
         phone: phone.trim(),
       });
-      setSuccess("Profile updated.");
+      addToast({ type: "success", message: "Profile updated." });
     } catch (e: any) {
       setError(e?.message ?? "Update failed.");
+      addToast({ type: "error", message: e?.message ?? "Update failed." });
     } finally {
       setBusy(false);
     }
@@ -213,11 +217,6 @@ export default function MyAccount() {
             </div>
           </form>
 
-          {success ? (
-            <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-800">
-              {success}
-            </div>
-          ) : null}
           {error ? (
             <div className="mt-3 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
               {error}

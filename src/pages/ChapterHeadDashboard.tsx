@@ -14,6 +14,7 @@ import {
   updateOpportunity,
   type OpportunityRow,
 } from "../lib/admin.api";
+import { useToast } from "../components/ui/ToastProvider";
 
 export default function ChapterHeadDashboard() {
   const scope = useRef<HTMLDivElement | null>(null);
@@ -25,8 +26,8 @@ export default function ChapterHeadDashboard() {
   const [opps, setOpps] = useState<OpportunityRow[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [params, setParams] = useSearchParams();
+  const { addToast } = useToast();
 
   const [editId, setEditId] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -46,16 +47,20 @@ export default function ChapterHeadDashboard() {
   }
 
   useEffect(() => {
-    refresh().catch((e: any) => setError(e?.message ?? "Failed to load opportunities."));
-  }, []);
+    refresh().catch((e: any) => {
+      const msg = e?.message ?? "Failed to load opportunities.";
+      setError(msg);
+      addToast({ type: "error", message: msg });
+    });
+  }, [addToast]);
 
   useEffect(() => {
     if (params.get("signed_in") === "1") {
-      setSuccess("Signed in successfully.");
+      addToast({ type: "success", message: "Signed in successfully." });
       params.delete("signed_in");
       setParams(params, { replace: true });
     }
-  }, [params, setParams]);
+  }, [params, setParams, addToast]);
 
   function clearForm() {
     setEditId(null);
@@ -71,11 +76,15 @@ export default function ChapterHeadDashboard() {
     setError(null);
     try {
       if (!chapterId) {
-        setError("Your account does not have a chapter assigned yet.");
+        const msg = "Your account does not have a chapter assigned yet.";
+        setError(msg);
+        addToast({ type: "error", message: msg });
         return;
       }
       if (!name.trim() || !date) {
-        setError("Event name and date are required.");
+        const msg = "Event name and date are required.";
+        setError(msg);
+        addToast({ type: "error", message: msg });
         return;
       }
 
@@ -95,11 +104,17 @@ export default function ChapterHeadDashboard() {
       if (editId) await updateOpportunity(editId, payload);
       else await createOpportunity(payload);
 
+      addToast({
+        type: "success",
+        message: editId ? "Opportunity updated." : "Opportunity created.",
+      });
       await refresh();
       clearForm();
     } catch (e: any) {
       // If RLS blocks, you’ll see it here (correct behavior)
-      setError(e?.message ?? "Save failed.");
+      const msg = e?.message ?? "Save failed.";
+      setError(msg);
+      addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
     }
@@ -114,11 +129,6 @@ export default function ChapterHeadDashboard() {
         {error ? (
           <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
             {error}
-          </div>
-        ) : null}
-        {success ? (
-          <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-800">
-            {success}
           </div>
         ) : null}
 
@@ -195,8 +205,11 @@ export default function ChapterHeadDashboard() {
                             await deleteOpportunity(o.id);
                             await refresh();
                             if (editId === o.id) clearForm();
+                            addToast({ type: "success", message: "Opportunity deleted." });
                           } catch (err: any) {
-                            setError(err?.message ?? "Delete failed.");
+                            const msg = err?.message ?? "Delete failed.";
+                            setError(msg);
+                            addToast({ type: "error", message: msg });
                           } finally {
                             setBusy(false);
                           }

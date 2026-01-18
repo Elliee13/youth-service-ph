@@ -7,6 +7,7 @@ import { supabase } from "../lib/supabase";
 import { fetchMyProfile } from "../lib/profile.service";
 import { normalizeRole } from "../auth/auth.utils";
 import type { Role } from "../auth/auth.types";
+import { useToast } from "../components/ui/ToastProvider";
 
 export default function SignIn() {
   const [params] = useSearchParams();
@@ -20,6 +21,7 @@ export default function SignIn() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   const redirectTo = useMemo(() => {
     const state = location.state as { from?: string } | null;
@@ -42,24 +44,27 @@ export default function SignIn() {
 
       if (!profile) {
         await supabase.auth.signOut();
-        setError(
-          "Your account is not provisioned yet (no profile role assigned). Ask the admin to create your profile in the database."
-        );
+        const message =
+          "Your account is not provisioned yet (no profile role assigned). Ask the admin to create your profile in the database.";
+        setError(message);
+        addToast({ type: "error", message });
         return;
       }
 
       if (profile.role !== role) {
         await supabase.auth.signOut();
-        setError(
-          `Role mismatch. Your account is '${profile.role}', but you tried to sign in as '${role}'.`
-        );
+        const message = `Role mismatch. Your account is '${profile.role}', but you tried to sign in as '${role}'.`;
+        setError(message);
+        addToast({ type: "error", message });
         return;
       }
 
       const separator = redirectTo.includes("?") ? "&" : "?";
       navigate(`${redirectTo}${separator}signed_in=1`, { replace: true });
     } catch (err: any) {
-      setError(err?.message ?? "Sign-in failed.");
+      const message = err?.message ?? "Sign-in failed.";
+      setError(message);
+      addToast({ type: "error", message });
     } finally {
       setBusy(false);
     }

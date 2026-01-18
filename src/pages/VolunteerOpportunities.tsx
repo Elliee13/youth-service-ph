@@ -13,6 +13,7 @@ import {
 import { SignUpModal } from "../components/volunteer/SignUpModal";
 import { useAuth } from "../auth/AuthProvider";
 import { Link } from "react-router-dom";
+import { useToast } from "../components/ui/ToastProvider";
 
 export default function VolunteerOpportunities() {
   const scope = useRef<HTMLDivElement | null>(null);
@@ -25,8 +26,8 @@ export default function VolunteerOpportunities() {
   const [signUpModal, setSignUpModal] = useState<{
     opportunity: VolunteerOpportunity;
   } | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const { user } = useAuth();
+  const { addToast } = useToast();
 
   useEffect(() => {
     let alive = true;
@@ -227,28 +228,14 @@ export default function VolunteerOpportunities() {
           chapterName={signUpModal.opportunity.chapter?.name ?? null}
           onClose={() => {
             setSignUpModal(null);
-            setSuccessMessage(null);
           }}
           onSuccess={() => {
-            setSuccessMessage(
-              `Successfully signed up for ${signUpModal.opportunity.event_name}! The chapter head will contact you soon.`
-            );
+            addToast({
+              type: "success",
+              message: `Successfully signed up for ${signUpModal.opportunity.event_name}! The chapter head will contact you soon.`,
+            });
           }}
         />
-      ) : null}
-
-      {/* Success Message Toast */}
-      {successMessage ? (
-        <div className="fixed bottom-6 right-6 z-50 max-w-md rounded-2xl border border-green-500/20 bg-green-500/10 px-4 py-3 text-sm text-green-700 shadow-lg">
-          <div className="font-semibold">Success!</div>
-          <div className="mt-1">{successMessage}</div>
-          <button
-            onClick={() => setSuccessMessage(null)}
-            className="mt-2 text-xs text-green-600 hover:underline"
-          >
-            Dismiss
-          </button>
-        </div>
       ) : null}
     </div>
   );

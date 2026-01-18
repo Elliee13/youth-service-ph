@@ -4,6 +4,7 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Container } from "../components/ui/Container";
 import { supabase } from "../lib/supabase";
+import { useToast } from "../components/ui/ToastProvider";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ export default function Register() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
@@ -44,9 +46,13 @@ export default function Register() {
         return;
       }
 
-      setMessage("Check your email to confirm your account before signing in.");
+      const info = "Check your email to confirm your account before signing in.";
+      setMessage(info);
+      addToast({ type: "success", message: info });
     } catch (err: any) {
-      setError(err?.message ?? "Registration failed.");
+      const msg = err?.message ?? "Registration failed.";
+      setError(msg);
+      addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
     }
@@ -67,7 +73,9 @@ export default function Register() {
       localStorage.setItem("ysp_auth_notice", "signed_in");
       navigate("/my-account?signed_in=1", { replace: true });
     } catch (err: any) {
-      setError(err?.message ?? "Sign-in failed.");
+      const msg = err?.message ?? "Sign-in failed.";
+      setError(msg);
+      addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
     }
@@ -88,7 +96,9 @@ export default function Register() {
       });
       if (oauthError) throw oauthError;
     } catch (err: any) {
-      setError(err?.message ?? "Google sign-in failed.");
+      const msg = err?.message ?? "Google sign-in failed.";
+      setError(msg);
+      addToast({ type: "error", message: msg });
       setBusy(false);
     }
   }

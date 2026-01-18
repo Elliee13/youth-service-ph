@@ -27,6 +27,7 @@ import {
   type SiteSettingsRow,
 } from "../lib/admin.api";
 import { uploadProgramImage } from "../lib/storage";
+import { useToast } from "../components/ui/ToastProvider";
 
 type Tab = "programs" | "chapters" | "opportunities" | "settings";
 
@@ -44,8 +45,8 @@ export default function AdminDashboard() {
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [params, setParams] = useSearchParams();
+  const { addToast } = useToast();
 
   // Program form
   const [pEditId, setPEditId] = useState<string | null>(null);
@@ -111,16 +112,20 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
-    refreshAll().catch((e: any) => setError(e?.message ?? "Failed to load dashboard."));
-  }, []);
+    refreshAll().catch((e: any) => {
+      const msg = e?.message ?? "Failed to load dashboard.";
+      setError(msg);
+      addToast({ type: "error", message: msg });
+    });
+  }, [addToast]);
 
   useEffect(() => {
     if (params.get("signed_in") === "1") {
-      setSuccess("Signed in successfully.");
+      addToast({ type: "success", message: "Signed in successfully." });
       params.delete("signed_in");
       setParams(params, { replace: true });
     }
-  }, [params, setParams]);
+  }, [params, setParams, addToast]);
 
   function clearProgramForm() {
     setPEditId(null);
@@ -152,13 +157,14 @@ export default function AdminDashboard() {
   async function handleUploadProgramImage(file: File, programId: string) {
     setBusy(true);
     setError(null);
-    setSuccess(null);
     try {
       const { publicUrl } = await uploadProgramImage(file, programId);
       setPImageUrl(publicUrl);
-      setSuccess("Image uploaded.");
+      addToast({ type: "success", message: "Image uploaded." });
     } catch (e: any) {
-      setError(e?.message ?? "Image upload failed.");
+      const msg = e?.message ?? "Image upload failed.";
+      setError(msg);
+      addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
     }
@@ -168,10 +174,10 @@ export default function AdminDashboard() {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    setSuccess(null);
     try {
       if (!pTitle.trim() || !pDesc.trim()) {
         setError("Program title and description are required.");
+        addToast({ type: "error", message: "Program title and description are required." });
         return;
       }
 
@@ -181,20 +187,22 @@ export default function AdminDashboard() {
           description: pDesc.trim(),
           image_url: pImageUrl,
         });
-        setSuccess("Program updated.");
+        addToast({ type: "success", message: "Program updated." });
       } else {
         await adminCreateProgram({
           title: pTitle.trim(),
           description: pDesc.trim(),
           image_url: pImageUrl,
         });
-        setSuccess("Program created.");
+        addToast({ type: "success", message: "Program created." });
       }
 
       await refreshAll();
       clearProgramForm();
     } catch (e: any) {
-      setError(e?.message ?? "Failed to save program.");
+      const msg = e?.message ?? "Failed to save program.";
+      setError(msg);
+      addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
     }
@@ -204,10 +212,10 @@ export default function AdminDashboard() {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    setSuccess(null);
     try {
       if (!cName.trim()) {
         setError("Chapter name is required.");
+        addToast({ type: "error", message: "Chapter name is required." });
         return;
       }
 
@@ -222,16 +230,18 @@ export default function AdminDashboard() {
 
       if (cEditId) {
         await adminUpdateChapter(cEditId, payload);
-        setSuccess("Chapter updated.");
+        addToast({ type: "success", message: "Chapter updated." });
       } else {
         await adminCreateChapter(payload as any);
-        setSuccess("Chapter created.");
+        addToast({ type: "success", message: "Chapter created." });
       }
 
       await refreshAll();
       clearChapterForm();
     } catch (e: any) {
-      setError(e?.message ?? "Failed to save chapter.");
+      const msg = e?.message ?? "Failed to save chapter.";
+      setError(msg);
+      addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
     }
@@ -241,10 +251,10 @@ export default function AdminDashboard() {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    setSuccess(null);
     try {
       if (!oName.trim() || !oDate || !oChapterId) {
         setError("Event name, date, and chapter are required.");
+        addToast({ type: "error", message: "Event name, date, and chapter are required." });
         return;
       }
 
@@ -263,16 +273,18 @@ export default function AdminDashboard() {
 
       if (oEditId) {
         await updateOpportunity(oEditId, payload);
-        setSuccess("Opportunity updated.");
+        addToast({ type: "success", message: "Opportunity updated." });
       } else {
         await createOpportunity(payload);
-        setSuccess("Opportunity created.");
+        addToast({ type: "success", message: "Opportunity created." });
       }
 
       await refreshAll();
       clearOppForm();
     } catch (e: any) {
-      setError(e?.message ?? "Failed to save opportunity.");
+      const msg = e?.message ?? "Failed to save opportunity.";
+      setError(msg);
+      addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
     }
@@ -282,7 +294,6 @@ export default function AdminDashboard() {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    setSuccess(null);
     try {
       await updateSiteSettingsRow({
         projects_count: Number(sProjects) || 0,
@@ -294,9 +305,11 @@ export default function AdminDashboard() {
       });
 
       await refreshAll();
-      setSuccess("Site settings updated.");
+      addToast({ type: "success", message: "Site settings updated." });
     } catch (e: any) {
-      setError(e?.message ?? "Failed to update site settings.");
+      const msg = e?.message ?? "Failed to update site settings.";
+      setError(msg);
+      addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
     }
@@ -339,11 +352,6 @@ export default function AdminDashboard() {
         {error ? (
           <div className="mt-6 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
             {error}
-          </div>
-        ) : null}
-        {success ? (
-          <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-800">
-            {success}
           </div>
         ) : null}
 
@@ -454,14 +462,15 @@ export default function AdminDashboard() {
                             e.stopPropagation();
                             setBusy(true);
                             setError(null);
-                            setSuccess(null);
                             try {
                               await adminDeleteProgram(p.id);
                               await refreshAll();
                               if (pEditId === p.id) clearProgramForm();
-                              setSuccess("Program deleted.");
+                              addToast({ type: "success", message: "Program deleted." });
                             } catch (err: any) {
-                              setError(err?.message ?? "Delete failed.");
+                              const msg = err?.message ?? "Delete failed.";
+                              setError(msg);
+                              addToast({ type: "error", message: msg });
                             } finally {
                               setBusy(false);
                             }
@@ -560,14 +569,15 @@ export default function AdminDashboard() {
                             e.stopPropagation();
                             setBusy(true);
                             setError(null);
-                            setSuccess(null);
                             try {
                               await adminDeleteChapter(c.id);
                               await refreshAll();
                               if (cEditId === c.id) clearChapterForm();
-                              setSuccess("Chapter deleted.");
+                              addToast({ type: "success", message: "Chapter deleted." });
                             } catch (err: any) {
-                              setError(err?.message ?? "Delete failed.");
+                              const msg = err?.message ?? "Delete failed.";
+                              setError(msg);
+                              addToast({ type: "error", message: msg });
                             } finally {
                               setBusy(false);
                             }
@@ -669,14 +679,15 @@ export default function AdminDashboard() {
                             e.stopPropagation();
                             setBusy(true);
                             setError(null);
-                            setSuccess(null);
                             try {
                               await deleteOpportunity(o.id);
                               await refreshAll();
                               if (oEditId === o.id) clearOppForm();
-                              setSuccess("Opportunity deleted.");
+                              addToast({ type: "success", message: "Opportunity deleted." });
                             } catch (err: any) {
-                              setError(err?.message ?? "Delete failed.");
+                              const msg = err?.message ?? "Delete failed.";
+                              setError(msg);
+                              addToast({ type: "error", message: msg });
                             } finally {
                               setBusy(false);
                             }

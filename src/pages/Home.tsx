@@ -5,6 +5,7 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Section } from "../components/ui/Section";
 import { Container } from "../components/ui/Container";
+import { useToast } from "../components/ui/ToastProvider";
 
 import { useGsapReveal } from "../hooks/useGsapReveal";
 import {
@@ -31,8 +32,8 @@ export default function Home() {
   const [programs, setPrograms] = useState<Program[]>([]);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [params, setParams] = useSearchParams();
+  const { addToast } = useToast();
 
   useEffect(() => {
     let alive = true;
@@ -75,18 +76,21 @@ export default function Home() {
 
   useEffect(() => {
     if (params.get("signed_out") === "1") {
-      setNotice("You’ve been signed out.");
+      addToast({ type: "success", message: "You’ve been signed out." });
       params.delete("signed_out");
       setParams(params, { replace: true });
     }
     if (params.get("error") || params.get("error_description")) {
       const description = params.get("error_description") || params.get("error");
-      setError(description ? decodeURIComponent(description) : "Authentication failed.");
+      addToast({
+        type: "error",
+        message: description ? decodeURIComponent(description) : "Authentication failed.",
+      });
       params.delete("error");
       params.delete("error_description");
       setParams(params, { replace: true });
     }
-  }, [params, setParams]);
+  }, [params, setParams, addToast]);
 
   const stats = useMemo(
     () => ({
@@ -180,11 +184,6 @@ export default function Home() {
               {error ? (
                 <div className="mx-auto mt-6 max-w-2xl rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
                   {error}
-                </div>
-              ) : null}
-              {notice ? (
-                <div className="mx-auto mt-4 max-w-2xl rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-800">
-                  {notice}
                 </div>
               ) : null}
             </div>
