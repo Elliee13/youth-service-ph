@@ -66,13 +66,22 @@ export default function MembershipChapter() {
         title="Membership application"
         description="Fill out the form below. Our team will review your submission."
       >
-        <Card data-reveal className="overflow-hidden border-black/10 bg-white/70 backdrop-blur">
-          <div className="relative aspect-[16/10] w-full bg-[rgb(var(--card))]">
-            <iframe
-              title="YSP Membership Form"
-              src="https://docs.google.com/forms/d/e/1FAIpQLSdwMKgIjQNrlLH-j-Qdx0MrKxefxaLRC6gMI_oOgMTosDi_sQ/viewform"
-              className="absolute inset-0 h-full w-full"
-            />
+        <Card data-reveal className="border-black/10 bg-white/70 p-6 sm:p-8">
+          <div className="text-sm font-semibold">Membership form</div>
+          <p className="mt-2 text-sm text-black/65">
+            Google Forms no longer allows embedding on external sites, so the form opens in a new
+            tab.
+          </p>
+          <div className="mt-5">
+            <a
+              href="https://docs.google.com/forms/d/e/1FAIpQLSdwMKgIjQNrlLH-j-Qdx0MrKxefxaLRC6gMI_oOgMTosDi_sQ/viewform"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Button size="lg" className="accent-glow">
+                Open Membership Form
+              </Button>
+            </a>
           </div>
         </Card>
       </Section>
@@ -83,13 +92,21 @@ export default function MembershipChapter() {
         description="Submit your chapter proposal. We’ll contact you if approved."
       >
         <div className="grid gap-6 lg:grid-cols-2">
-          <Card data-reveal className="overflow-hidden border-black/10 bg-white/70 backdrop-blur">
-            <div className="relative aspect-[16/10] w-full bg-[rgb(var(--card))]">
-              <iframe
-                title="YSP Create a Chapter Form"
-                src="https://forms.gle/cWPsgBJKLaQoLuUr8?fbclid=IwY2xjawOKRLJleHRuA2FlbQIxMABicmlkETFJWDhJY0U1azBWMDFLOXh2c3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHm01_q8ZFNsR30YIkD2ODzju7eleolSNiJgUoZKW11PV7HAc0NeXszwCRjFU_aem_2mVtlAdu6_smAMkowigvAA"
-                className="absolute inset-0 h-full w-full"
-              />
+          <Card data-reveal className="border-black/10 bg-white/70 p-6 sm:p-8">
+            <div className="text-sm font-semibold">Chapter proposal form</div>
+            <p className="mt-2 text-sm text-black/65">
+              This form opens in a new tab due to Google Forms embed restrictions.
+            </p>
+            <div className="mt-5">
+              <a
+                href="https://forms.gle/cWPsgBJKLaQoLuUr8?fbclid=IwY2xjawOKRLJleHRuA2FlbQIxMABicmlkETFJWDhJY0U1azBWMDFLOXh2c3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHm01_q8ZFNsR30YIkD2ODzju7eleolSNiJgUoZKW11PV7HAc0NeXszwCRjFU_aem_2mVtlAdu6_smAMkowigvAA"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Button size="lg" className="accent-glow">
+                  Open Chapter Proposal Form
+                </Button>
+              </a>
             </div>
           </Card>
 
