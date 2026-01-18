@@ -39,7 +39,7 @@ export default function Register() {
       if (signUpError) throw signUpError;
 
       if (data.session) {
-        navigate("/", { replace: true });
+        navigate("/my-account?welcome=1", { replace: true });
         return;
       }
 
@@ -63,7 +63,7 @@ export default function Register() {
         password: signInPassword,
       });
       if (signInError) throw signInError;
-      navigate("/", { replace: true });
+      navigate("/my-account?signed_in=1", { replace: true });
     } catch (err: any) {
       setError(err?.message ?? "Sign-in failed.");
     } finally {

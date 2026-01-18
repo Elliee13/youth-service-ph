@@ -14,6 +14,7 @@ const nav = [
 export function Header() {
   const { user, profile } = useAuth();
   const showPublicAccount = Boolean(user && !profile?.role);
+  const showStaffButtons = !showPublicAccount;
 
   return (
     <header
@@ -65,21 +66,25 @@ export function Header() {
               My Account
             </Link>
           ) : null}
-          <Link to="/register">
-            <Button variant="secondary" size="sm">
-              Volunteer
-            </Button>
-          </Link>
-          <Link to="/sign-in?role=admin">
-            <Button variant="secondary" size="sm">
-              Admin
-            </Button>
-          </Link>
-          <Link to="/sign-in?role=chapter_head">
-            <Button size="sm" className="accent-glow">
-              Chapter Head
-            </Button>
-          </Link>
+          {showStaffButtons ? (
+            <>
+              <Link to="/register">
+                <Button variant="secondary" size="sm">
+                  Volunteer
+                </Button>
+              </Link>
+              <Link to="/sign-in?role=admin">
+                <Button variant="secondary" size="sm">
+                  Admin
+                </Button>
+              </Link>
+              <Link to="/sign-in?role=chapter_head">
+                <Button size="sm" className="accent-glow">
+                  Chapter Head
+                </Button>
+              </Link>
+            </>
+          ) : null}
         </div>
 
         {/* Mobile quick access */}
@@ -92,16 +97,20 @@ export function Header() {
               Account
             </Link>
           ) : null}
-          <Link to="/register">
-            <Button size="sm" className="accent-glow">
-              Volunteer
-            </Button>
-          </Link>
-          <Link to="/sign-in?role=chapter_head">
-            <Button size="sm" variant="secondary">
-              Staff
-            </Button>
-          </Link>
+          {showStaffButtons ? (
+            <>
+              <Link to="/register">
+                <Button size="sm" className="accent-glow">
+                  Volunteer
+                </Button>
+              </Link>
+              <Link to="/sign-in?role=chapter_head">
+                <Button size="sm" variant="secondary">
+                  Staff
+                </Button>
+              </Link>
+            </>
+          ) : null}
         </div>
       </div>
 

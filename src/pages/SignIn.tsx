@@ -56,7 +56,8 @@ export default function SignIn() {
         return;
       }
 
-      navigate(redirectTo, { replace: true });
+      const separator = redirectTo.includes("?") ? "&" : "?";
+      navigate(`${redirectTo}${separator}signed_in=1`, { replace: true });
     } catch (err: any) {
       setError(err?.message ?? "Sign-in failed.");
     } finally {

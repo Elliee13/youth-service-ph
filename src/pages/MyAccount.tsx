@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "../components/ui/Card";
 import { Container } from "../components/ui/Container";
 import { Section } from "../components/ui/Section";
@@ -19,6 +19,7 @@ export default function MyAccount() {
   useGsapReveal(scope);
 
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
   const { user, profile, signOut } = useAuth();
 
   const [publicUser, setPublicUser] = useState<PublicUser | null>(null);
@@ -64,6 +65,26 @@ export default function MyAccount() {
     }
   }, [user, navigate]);
 
+  useEffect(() => {
+    if (params.get("welcome") === "1") {
+      setSuccess("Welcome! Your volunteer account is ready.");
+      params.delete("welcome");
+      setParams(params, { replace: true });
+    }
+    if (params.get("signed_in") === "1") {
+      setSuccess("Signed in successfully.");
+      params.delete("signed_in");
+      setParams(params, { replace: true });
+    }
+    if (params.get("error") || params.get("error_description")) {
+      const description = params.get("error_description") || params.get("error");
+      setError(description ? decodeURIComponent(description) : "Sign-in failed.");
+      params.delete("error");
+      params.delete("error_description");
+      setParams(params, { replace: true });
+    }
+  }, [params, setParams]);
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -86,7 +107,7 @@ export default function MyAccount() {
 
   async function handleSignOut() {
     await signOut();
-    navigate("/", { replace: true });
+    navigate("/?signed_out=1", { replace: true });
   }
 
   if (profile?.role) {
@@ -175,7 +196,7 @@ export default function MyAccount() {
                 {busy ? "Saving..." : "Save changes"}
               </Button>
               <Button type="button" variant="secondary" onClick={handleSignOut}>
-                Sign out
+                Log out
               </Button>
             </div>
           </form>

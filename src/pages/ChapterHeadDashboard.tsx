@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { CmsShell } from "../components/cms/CmsShell";
 import { Card } from "../components/ui/Card";
 import { DataTable } from "../components/cms/DataTable";
@@ -24,6 +25,8 @@ export default function ChapterHeadDashboard() {
   const [opps, setOpps] = useState<OpportunityRow[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [params, setParams] = useSearchParams();
 
   const [editId, setEditId] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -45,6 +48,14 @@ export default function ChapterHeadDashboard() {
   useEffect(() => {
     refresh().catch((e: any) => setError(e?.message ?? "Failed to load opportunities."));
   }, []);
+
+  useEffect(() => {
+    if (params.get("signed_in") === "1") {
+      setSuccess("Signed in successfully.");
+      params.delete("signed_in");
+      setParams(params, { replace: true });
+    }
+  }, [params, setParams]);
 
   function clearForm() {
     setEditId(null);
@@ -103,6 +114,11 @@ export default function ChapterHeadDashboard() {
         {error ? (
           <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
             {error}
+          </div>
+        ) : null}
+        {success ? (
+          <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-800">
+            {success}
           </div>
         ) : null}
 

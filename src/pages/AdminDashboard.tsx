@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card } from "../components/ui/Card";
 import { CmsShell } from "../components/cms/CmsShell";
 import { DataTable } from "../components/cms/DataTable";
@@ -43,6 +44,8 @@ export default function AdminDashboard() {
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [params, setParams] = useSearchParams();
 
   // Program form
   const [pEditId, setPEditId] = useState<string | null>(null);
@@ -111,6 +114,14 @@ export default function AdminDashboard() {
     refreshAll().catch((e: any) => setError(e?.message ?? "Failed to load dashboard."));
   }, []);
 
+  useEffect(() => {
+    if (params.get("signed_in") === "1") {
+      setSuccess("Signed in successfully.");
+      params.delete("signed_in");
+      setParams(params, { replace: true });
+    }
+  }, [params, setParams]);
+
   function clearProgramForm() {
     setPEditId(null);
     setPTitle("");
@@ -141,9 +152,11 @@ export default function AdminDashboard() {
   async function handleUploadProgramImage(file: File, programId: string) {
     setBusy(true);
     setError(null);
+    setSuccess(null);
     try {
       const { publicUrl } = await uploadProgramImage(file, programId);
       setPImageUrl(publicUrl);
+      setSuccess("Image uploaded.");
     } catch (e: any) {
       setError(e?.message ?? "Image upload failed.");
     } finally {
@@ -155,6 +168,7 @@ export default function AdminDashboard() {
     e.preventDefault();
     setBusy(true);
     setError(null);
+    setSuccess(null);
     try {
       if (!pTitle.trim() || !pDesc.trim()) {
         setError("Program title and description are required.");
@@ -167,12 +181,14 @@ export default function AdminDashboard() {
           description: pDesc.trim(),
           image_url: pImageUrl,
         });
+        setSuccess("Program updated.");
       } else {
         await adminCreateProgram({
           title: pTitle.trim(),
           description: pDesc.trim(),
           image_url: pImageUrl,
         });
+        setSuccess("Program created.");
       }
 
       await refreshAll();
@@ -188,6 +204,7 @@ export default function AdminDashboard() {
     e.preventDefault();
     setBusy(true);
     setError(null);
+    setSuccess(null);
     try {
       if (!cName.trim()) {
         setError("Chapter name is required.");
@@ -203,8 +220,13 @@ export default function AdminDashboard() {
         contact_phone: cContactPhone.trim() || null,
       };
 
-      if (cEditId) await adminUpdateChapter(cEditId, payload);
-      else await adminCreateChapter(payload as any);
+      if (cEditId) {
+        await adminUpdateChapter(cEditId, payload);
+        setSuccess("Chapter updated.");
+      } else {
+        await adminCreateChapter(payload as any);
+        setSuccess("Chapter created.");
+      }
 
       await refreshAll();
       clearChapterForm();
@@ -219,6 +241,7 @@ export default function AdminDashboard() {
     e.preventDefault();
     setBusy(true);
     setError(null);
+    setSuccess(null);
     try {
       if (!oName.trim() || !oDate || !oChapterId) {
         setError("Event name, date, and chapter are required.");
@@ -238,8 +261,13 @@ export default function AdminDashboard() {
         contact_details: oContact.trim() || "Contact the chapter head to sign up.",
       };
 
-      if (oEditId) await updateOpportunity(oEditId, payload);
-      else await createOpportunity(payload);
+      if (oEditId) {
+        await updateOpportunity(oEditId, payload);
+        setSuccess("Opportunity updated.");
+      } else {
+        await createOpportunity(payload);
+        setSuccess("Opportunity created.");
+      }
 
       await refreshAll();
       clearOppForm();
@@ -254,6 +282,7 @@ export default function AdminDashboard() {
     e.preventDefault();
     setBusy(true);
     setError(null);
+    setSuccess(null);
     try {
       await updateSiteSettingsRow({
         projects_count: Number(sProjects) || 0,
@@ -265,6 +294,7 @@ export default function AdminDashboard() {
       });
 
       await refreshAll();
+      setSuccess("Site settings updated.");
     } catch (e: any) {
       setError(e?.message ?? "Failed to update site settings.");
     } finally {
@@ -309,6 +339,11 @@ export default function AdminDashboard() {
         {error ? (
           <div className="mt-6 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
             {error}
+          </div>
+        ) : null}
+        {success ? (
+          <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-800">
+            {success}
           </div>
         ) : null}
 
@@ -419,10 +454,12 @@ export default function AdminDashboard() {
                             e.stopPropagation();
                             setBusy(true);
                             setError(null);
+                            setSuccess(null);
                             try {
                               await adminDeleteProgram(p.id);
                               await refreshAll();
                               if (pEditId === p.id) clearProgramForm();
+                              setSuccess("Program deleted.");
                             } catch (err: any) {
                               setError(err?.message ?? "Delete failed.");
                             } finally {
@@ -523,10 +560,12 @@ export default function AdminDashboard() {
                             e.stopPropagation();
                             setBusy(true);
                             setError(null);
+                            setSuccess(null);
                             try {
                               await adminDeleteChapter(c.id);
                               await refreshAll();
                               if (cEditId === c.id) clearChapterForm();
+                              setSuccess("Chapter deleted.");
                             } catch (err: any) {
                               setError(err?.message ?? "Delete failed.");
                             } finally {
@@ -630,10 +669,12 @@ export default function AdminDashboard() {
                             e.stopPropagation();
                             setBusy(true);
                             setError(null);
+                            setSuccess(null);
                             try {
                               await deleteOpportunity(o.id);
                               await refreshAll();
                               if (oEditId === o.id) clearOppForm();
+                              setSuccess("Opportunity deleted.");
                             } catch (err: any) {
                               setError(err?.message ?? "Delete failed.");
                             } finally {
