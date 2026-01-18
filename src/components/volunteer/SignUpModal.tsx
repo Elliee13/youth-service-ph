@@ -79,7 +79,10 @@ export function SignUpModal({
       onSuccess();
       onClose();
     } catch (e: any) {
-      const msg = e?.message ?? "Failed to sign up. Please try again.";
+      const raw = e?.message ?? "";
+      const msg = raw.includes("unique_signup")
+        ? "Already applied for this opportunity."
+        : raw || "Failed to sign up. Please try again.";
       setError(msg);
       addToast({ type: "error", message: msg });
     } finally {
