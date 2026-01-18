@@ -1,6 +1,7 @@
 import { NavLink, Link } from "react-router-dom";
 import yspLogo from "../../assets/ysp-logo.png";
 import { Button } from "../ui/Button";
+import { useAuth } from "../../auth/AuthProvider";
 
 const nav = [
   { label: "Home", to: "/" },
@@ -11,6 +12,9 @@ const nav = [
 ] as const;
 
 export function Header() {
+  const { user, profile } = useAuth();
+  const showPublicAccount = Boolean(user && !profile?.role);
+
   return (
     <header
       data-header
@@ -53,6 +57,19 @@ export function Header() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
+          {showPublicAccount ? (
+            <Link
+              to="/my-account"
+              className="rounded-full border border-[rgba(255,119,31,0.35)] bg-[rgba(255,119,31,0.10)] px-4 py-1 text-xs font-semibold text-[rgb(var(--accent))] transition hover:bg-[rgba(255,119,31,0.18)]"
+            >
+              My Account
+            </Link>
+          ) : null}
+          <Link to="/register">
+            <Button variant="secondary" size="sm">
+              Volunteer
+            </Button>
+          </Link>
           <Link to="/sign-in?role=admin">
             <Button variant="secondary" size="sm">
               Admin
@@ -67,9 +84,22 @@ export function Header() {
 
         {/* Mobile quick access */}
         <div className="flex items-center gap-2 md:hidden">
-          <Link to="/sign-in?role=chapter_head">
+          {showPublicAccount ? (
+            <Link
+              to="/my-account"
+              className="rounded-full border border-[rgba(255,119,31,0.35)] bg-[rgba(255,119,31,0.12)] px-3 py-1 text-[11px] font-semibold text-[rgb(var(--accent))]"
+            >
+              Account
+            </Link>
+          ) : null}
+          <Link to="/register">
             <Button size="sm" className="accent-glow">
-              Sign In
+              Volunteer
+            </Button>
+          </Link>
+          <Link to="/sign-in?role=chapter_head">
+            <Button size="sm" variant="secondary">
+              Staff
             </Button>
           </Link>
         </div>

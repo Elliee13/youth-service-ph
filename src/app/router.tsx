@@ -27,6 +27,8 @@ const VolunteerOpportunities = lazy(() => import("../pages/VolunteerOpportunitie
 const Contact = lazy(() => import("../pages/Contact"));
 
 const SignIn = lazy(() => import("../pages/SignIn"));
+const Register = lazy(() => import("../pages/Register"));
+const MyAccount = lazy(() => import("../pages/MyAccount"));
 const AdminDashboard = lazy(() => import("../pages/AdminDashboard"));
 const ChapterHeadDashboard = lazy(() => import("../pages/ChapterHeadDashboard"));
 
@@ -43,6 +45,8 @@ export const router = createBrowserRouter([
       { path: "/contact", element: withSuspense(<Contact />) },
 
       { path: "/sign-in", element: withSuspense(<SignIn />) },
+      { path: "/register", element: withSuspense(<Register />) },
+      { path: "/my-account", element: withSuspense(<MyAccount />) },
 
       {
         path: "/admin",

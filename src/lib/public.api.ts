@@ -38,6 +38,14 @@ export type VolunteerOpportunity = {
   chapter: { id: string; name: string } | null;
 };
 
+export type PublicUser = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  created_at: string;
+};
+
 function logAndThrow(scope: string, error: any) {
   console.error(`[public.api] ${scope}`, error);
   throw error;
@@ -104,6 +112,42 @@ export async function listVolunteerOpportunities(limit?: number): Promise<Volunt
   return (data ?? []) as unknown as VolunteerOpportunity[];
 }
 
+export async function getMyPublicUser(): Promise<PublicUser | null> {
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError) logAndThrow("getMyPublicUser.user", userError);
+  if (!userData.user) return null;
+
+  const { data, error } = await supabase
+    .from("users")
+    .select("id, full_name, email, phone, created_at")
+    .eq("id", userData.user.id)
+    .maybeSingle();
+
+  if (error) logAndThrow("getMyPublicUser", error);
+  return (data ?? null) as PublicUser | null;
+}
+
+export async function updateMyPublicUser(input: {
+  full_name: string;
+  email: string;
+  phone: string;
+}): Promise<void> {
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError) logAndThrow("updateMyPublicUser.user", userError);
+  if (!userData.user) throw new Error("Not authenticated.");
+
+  const { error } = await supabase
+    .from("users")
+    .update({
+      full_name: input.full_name,
+      email: input.email,
+      phone: input.phone,
+    })
+    .eq("id", userData.user.id);
+
+  if (error) logAndThrow("updateMyPublicUser", error);
+}
+
 export type VolunteerSignupInput = {
   opportunity_id: string;
   full_name: string;
@@ -112,14 +156,50 @@ export type VolunteerSignupInput = {
   message?: string;
 };
 
+export type VolunteerSignup = {
+  id: string;
+  opportunity_id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  message: string | null;
+  created_at: string;
+  opportunity: {
+    event_name: string;
+    event_date: string;
+    chapter: { name: string } | null;
+  } | null;
+};
+
 export async function signUpForOpportunity(input: VolunteerSignupInput): Promise<void> {
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id ?? null;
+
   const { error } = await supabase.from("volunteer_signups").insert({
     opportunity_id: input.opportunity_id,
     full_name: input.full_name,
     email: input.email,
     phone: input.phone,
     message: input.message || null,
+    user_id: userId,
   });
 
   if (error) logAndThrow("signUpForOpportunity", error);
+}
+
+export async function listMyVolunteerSignups(): Promise<VolunteerSignup[]> {
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError) logAndThrow("listMyVolunteerSignups.user", userError);
+  if (!userData.user) return [];
+
+  const { data, error } = await supabase
+    .from("volunteer_signups")
+    .select(
+      "id, opportunity_id, full_name, email, phone, message, created_at, opportunity:volunteer_opportunities(event_name, event_date, chapter:chapters(name))"
+    )
+    .eq("user_id", userData.user.id)
+    .order("created_at", { ascending: false });
+
+  if (error) logAndThrow("listMyVolunteerSignups", error);
+  return (data ?? []) as unknown as VolunteerSignup[];
 }

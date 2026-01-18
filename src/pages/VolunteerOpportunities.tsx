@@ -4,8 +4,15 @@ import { Section } from "../components/ui/Section";
 import { Container } from "../components/ui/Container";
 import { Button } from "../components/ui/Button";
 import { useGsapReveal } from "../hooks/useGsapReveal";
-import { listVolunteerOpportunities, type VolunteerOpportunity } from "../lib/public.api";
+import {
+  listMyVolunteerSignups,
+  listVolunteerOpportunities,
+  type VolunteerOpportunity,
+  type VolunteerSignup,
+} from "../lib/public.api";
 import { SignUpModal } from "../components/volunteer/SignUpModal";
+import { useAuth } from "../auth/AuthProvider";
+import { Link } from "react-router-dom";
 
 export default function VolunteerOpportunities() {
   const scope = useRef<HTMLDivElement | null>(null);
@@ -13,10 +20,13 @@ export default function VolunteerOpportunities() {
 
   const [items, setItems] = useState<VolunteerOpportunity[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [mySignups, setMySignups] = useState<VolunteerSignup[]>([]);
+  const [mySignupsError, setMySignupsError] = useState<string | null>(null);
   const [signUpModal, setSignUpModal] = useState<{
     opportunity: VolunteerOpportunity;
   } | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     let alive = true;
@@ -34,6 +44,30 @@ export default function VolunteerOpportunities() {
       alive = false;
     };
   }, []);
+
+  useEffect(() => {
+    let alive = true;
+    if (!user) {
+      setMySignups([]);
+      setMySignupsError(null);
+      return;
+    }
+
+    (async () => {
+      try {
+        const data = await listMyVolunteerSignups();
+        if (!alive) return;
+        setMySignups(data);
+      } catch (e: any) {
+        if (!alive) return;
+        setMySignupsError(e?.message ?? "Failed to load your signups.");
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [user]);
 
   return (
     <div ref={scope}>
@@ -60,6 +94,19 @@ export default function VolunteerOpportunities() {
             >
               Scan event details, SDGs impacted, and contact information to sign up directly.
             </p>
+
+            {!user ? (
+              <div className="mt-6 rounded-2xl border border-black/10 bg-white/80 px-4 py-4 text-sm text-black/70 shadow-sm">
+                Create a volunteer account to auto-fill signup details and track your history.{" "}
+                <Link
+                  to="/register"
+                  className="font-semibold text-[rgb(var(--accent))] hover:underline"
+                >
+                  Register now
+                </Link>
+                .
+              </div>
+            ) : null}
 
             {error ? (
               <div className="mt-6 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
@@ -125,6 +172,51 @@ export default function VolunteerOpportunities() {
           ))}
         </div>
       </Section>
+
+      {user ? (
+        <Section
+          eyebrow="My activity"
+          title="Your signups"
+          description="A quick log of the opportunities you’ve registered for."
+        >
+          {mySignupsError ? (
+            <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-700">
+              {mySignupsError}
+            </div>
+          ) : null}
+
+          {!mySignupsError && mySignups.length === 0 ? (
+            <div className="rounded-2xl border border-black/10 bg-white p-5 text-sm text-black/60">
+              You haven’t signed up yet. Pick an opportunity above to get started.
+            </div>
+          ) : null}
+
+          <div className="grid gap-4">
+            {mySignups.map((signup) => (
+              <Card key={signup.id} className="border-black/10 bg-white p-5">
+                <div className="text-sm font-semibold">
+                  {signup.opportunity?.event_name ?? "Opportunity"}
+                </div>
+                <div className="mt-2 text-xs text-black/60">
+                  <span className="font-medium text-black/70">
+                    {signup.opportunity?.chapter?.name ?? "Unknown chapter"}
+                  </span>
+                  <span className="mx-2 text-black/25">•</span>
+                  <span className="tabular-nums">
+                    {signup.opportunity?.event_date ?? "Date pending"}
+                  </span>
+                </div>
+                <div className="mt-3 text-xs text-black/55">
+                  Signed up on{" "}
+                  <span className="tabular-nums">
+                    {new Date(signup.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </Section>
+      ) : null}
 
       {/* Sign Up Modal */}
       {signUpModal ? (
