@@ -20,9 +20,7 @@ export default function VolunteerOpportunities() {
   useGsapReveal(scope);
 
   const [items, setItems] = useState<VolunteerOpportunity[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [mySignups, setMySignups] = useState<VolunteerSignup[]>([]);
-  const [mySignupsError, setMySignupsError] = useState<string | null>(null);
   const [signUpModal, setSignUpModal] = useState<{
     opportunity: VolunteerOpportunity;
   } | null>(null);
@@ -39,7 +37,6 @@ export default function VolunteerOpportunities() {
       } catch (e: any) {
         if (!alive) return;
         const msg = e?.message ?? "Failed to load opportunities.";
-        setError(msg);
         addToast({ type: "error", message: msg });
       }
     })();
@@ -52,7 +49,6 @@ export default function VolunteerOpportunities() {
     let alive = true;
     if (!user) {
       setMySignups([]);
-      setMySignupsError(null);
       return;
     }
 
@@ -64,7 +60,6 @@ export default function VolunteerOpportunities() {
       } catch (e: any) {
         if (!alive) return;
         const msg = e?.message ?? "Failed to load your signups.";
-        setMySignupsError(msg);
         addToast({ type: "error", message: msg });
       }
     })();
@@ -180,7 +175,7 @@ export default function VolunteerOpportunities() {
           description="A quick log of the opportunities you’ve registered for."
         >
 
-          {!mySignupsError && mySignups.length === 0 ? (
+          {mySignups.length === 0 ? (
             <div className="rounded-2xl border border-black/10 bg-white p-5 text-sm text-black/60">
               You haven’t signed up yet. Pick an opportunity above to get started.
             </div>

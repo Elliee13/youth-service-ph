@@ -16,7 +16,6 @@ export default function Programs() {
   useGsapReveal(scope);
 
   const [programs, setPrograms] = useState<Program[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const { addToast } = useToast();
 
   useEffect(() => {
@@ -29,7 +28,6 @@ export default function Programs() {
       } catch (e: any) {
         if (!alive) return;
         const msg = e?.message ?? "Failed to load programs.";
-        setError(msg);
         addToast({ type: "error", message: msg });
       }
     })();

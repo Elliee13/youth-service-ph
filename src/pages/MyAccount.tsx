@@ -26,7 +26,6 @@ export default function MyAccount() {
   const [publicUser, setPublicUser] = useState<PublicUser | null>(null);
   const [signups, setSignups] = useState<VolunteerSignup[]>([]);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { addToast } = useToast();
 
   const [fullName, setFullName] = useState("");
@@ -52,7 +51,6 @@ export default function MyAccount() {
       } catch (e: any) {
         if (!alive) return;
         const msg = e?.message ?? "Failed to load profile.";
-        setError(msg);
         addToast({ type: "error", message: msg });
       }
     })();
@@ -106,7 +104,6 @@ export default function MyAccount() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setError(null);
 
     try {
       await updateMyPublicUser({
@@ -116,7 +113,6 @@ export default function MyAccount() {
       });
       addToast({ type: "success", message: "Profile updated." });
     } catch (e: any) {
-      setError(e?.message ?? "Update failed.");
       addToast({ type: "error", message: e?.message ?? "Update failed." });
     } finally {
       setBusy(false);

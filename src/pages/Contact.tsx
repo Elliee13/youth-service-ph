@@ -11,7 +11,6 @@ export default function Contact() {
   useGsapReveal(scope);
 
   const [settings, setSettings] = useState<SiteSettings | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const { addToast } = useToast();
 
   useEffect(() => {
@@ -24,7 +23,6 @@ export default function Contact() {
       } catch (e: any) {
         if (!alive) return;
         const msg = e?.message ?? "Failed to load contact details.";
-        setError(msg);
         addToast({ type: "error", message: msg });
       }
     })();

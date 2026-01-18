@@ -16,16 +16,11 @@ export default function Register() {
   const [signInEmail, setSignInEmail] = useState("");
   const [signInPassword, setSignInPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const { addToast } = useToast();
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setError(null);
-    setMessage(null);
-
     try {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: signUpEmail,
@@ -47,11 +42,9 @@ export default function Register() {
       }
 
       const info = "Check your email to confirm your account before signing in.";
-      setMessage(info);
       addToast({ type: "success", message: info });
     } catch (err: any) {
       const msg = err?.message ?? "Registration failed.";
-      setError(msg);
       addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
@@ -61,9 +54,6 @@ export default function Register() {
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setError(null);
-    setMessage(null);
-
     try {
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: signInEmail,
@@ -74,7 +64,6 @@ export default function Register() {
       navigate("/my-account?signed_in=1", { replace: true });
     } catch (err: any) {
       const msg = err?.message ?? "Sign-in failed.";
-      setError(msg);
       addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
@@ -83,9 +72,6 @@ export default function Register() {
 
   async function handleGoogleAuth() {
     setBusy(true);
-    setError(null);
-    setMessage(null);
-
     try {
       localStorage.setItem("ysp_auth_notice", "signed_in");
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
@@ -97,7 +83,6 @@ export default function Register() {
       if (oauthError) throw oauthError;
     } catch (err: any) {
       const msg = err?.message ?? "Google sign-in failed.";
-      setError(msg);
       addToast({ type: "error", message: msg });
       setBusy(false);
     }

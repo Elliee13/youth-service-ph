@@ -13,7 +13,6 @@ export default function MembershipChapter() {
   useGsapReveal(scope);
 
   const [chapters, setChapters] = useState<Chapter[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const { addToast } = useToast();
 
   useEffect(() => {
@@ -27,7 +26,6 @@ export default function MembershipChapter() {
         if (!alive) return;
         console.warn("[MembershipChapter] listChapters failed:", e);
         const msg = e?.message ?? "Failed to load chapters.";
-        setError(msg);
         addToast({ type: "error", message: msg });
         setChapters([]);
       }

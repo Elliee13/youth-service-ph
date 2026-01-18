@@ -27,7 +27,6 @@ export function SignUpModal({
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { addToast } = useToast();
 
   useEffect(() => {
@@ -52,12 +51,10 @@ export function SignUpModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setError(null);
 
     try {
       if (!fullName.trim() || !email.trim() || !phone.trim()) {
         const msg = "Please fill in all required fields.";
-        setError(msg);
         addToast({ type: "error", message: msg });
         return;
       }
@@ -80,7 +77,6 @@ export function SignUpModal({
       const msg = raw.includes("unique_signup")
         ? "Already applied for this opportunity."
         : raw || "Failed to sign up. Please try again.";
-      setError(msg);
       addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);

@@ -44,7 +44,6 @@ export default function AdminDashboard() {
   const [settings, setSettings] = useState<SiteSettingsRow | null>(null);
 
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [params, setParams] = useSearchParams();
   const { addToast } = useToast();
 
@@ -90,7 +89,6 @@ export default function AdminDashboard() {
   );
 
   async function refreshAll() {
-    setError(null);
     const [p, c, o, s] = await Promise.all([
       adminListPrograms(),
       adminListChapters(),
@@ -114,7 +112,6 @@ export default function AdminDashboard() {
   useEffect(() => {
     refreshAll().catch((e: any) => {
       const msg = e?.message ?? "Failed to load dashboard.";
-      setError(msg);
       addToast({ type: "error", message: msg });
     });
   }, [addToast]);
@@ -156,14 +153,12 @@ export default function AdminDashboard() {
   // ✅ Updated: requires a programId
   async function handleUploadProgramImage(file: File, programId: string) {
     setBusy(true);
-    setError(null);
     try {
       const { publicUrl } = await uploadProgramImage(file, programId);
       setPImageUrl(publicUrl);
       addToast({ type: "success", message: "Image uploaded." });
     } catch (e: any) {
       const msg = e?.message ?? "Image upload failed.";
-      setError(msg);
       addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
@@ -173,10 +168,8 @@ export default function AdminDashboard() {
   async function submitProgram(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setError(null);
     try {
       if (!pTitle.trim() || !pDesc.trim()) {
-        setError("Program title and description are required.");
         addToast({ type: "error", message: "Program title and description are required." });
         return;
       }
@@ -201,7 +194,6 @@ export default function AdminDashboard() {
       clearProgramForm();
     } catch (e: any) {
       const msg = e?.message ?? "Failed to save program.";
-      setError(msg);
       addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
@@ -211,10 +203,8 @@ export default function AdminDashboard() {
   async function submitChapter(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setError(null);
     try {
       if (!cName.trim()) {
-        setError("Chapter name is required.");
         addToast({ type: "error", message: "Chapter name is required." });
         return;
       }
@@ -240,7 +230,6 @@ export default function AdminDashboard() {
       clearChapterForm();
     } catch (e: any) {
       const msg = e?.message ?? "Failed to save chapter.";
-      setError(msg);
       addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
@@ -250,10 +239,8 @@ export default function AdminDashboard() {
   async function submitOpp(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setError(null);
     try {
       if (!oName.trim() || !oDate || !oChapterId) {
-        setError("Event name, date, and chapter are required.");
         addToast({ type: "error", message: "Event name, date, and chapter are required." });
         return;
       }
@@ -283,7 +270,6 @@ export default function AdminDashboard() {
       clearOppForm();
     } catch (e: any) {
       const msg = e?.message ?? "Failed to save opportunity.";
-      setError(msg);
       addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
@@ -293,7 +279,6 @@ export default function AdminDashboard() {
   async function submitSettings(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setError(null);
     try {
       await updateSiteSettingsRow({
         projects_count: Number(sProjects) || 0,
@@ -308,7 +293,6 @@ export default function AdminDashboard() {
       addToast({ type: "success", message: "Site settings updated." });
     } catch (e: any) {
       const msg = e?.message ?? "Failed to update site settings.";
-      setError(msg);
       addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
@@ -388,7 +372,10 @@ export default function AdminDashboard() {
 
                               // ✅ Need an ID for deterministic storage path
                               if (!pEditId) {
-                                setError("Create the program first, then upload an image while editing it.");
+                                addToast({
+                                  type: "error",
+                                  message: "Create the program first, then upload an image while editing it.",
+                                });
                                 return;
                               }
 
@@ -456,7 +443,6 @@ export default function AdminDashboard() {
                           onClick={async (e) => {
                             e.stopPropagation();
                             setBusy(true);
-                            setError(null);
                             try {
                               await adminDeleteProgram(p.id);
                               await refreshAll();
@@ -464,7 +450,6 @@ export default function AdminDashboard() {
                               addToast({ type: "success", message: "Program deleted." });
                             } catch (err: any) {
                               const msg = err?.message ?? "Delete failed.";
-                              setError(msg);
                               addToast({ type: "error", message: msg });
                             } finally {
                               setBusy(false);
@@ -563,7 +548,6 @@ export default function AdminDashboard() {
                           onClick={async (e) => {
                             e.stopPropagation();
                             setBusy(true);
-                            setError(null);
                             try {
                               await adminDeleteChapter(c.id);
                               await refreshAll();
@@ -571,7 +555,6 @@ export default function AdminDashboard() {
                               addToast({ type: "success", message: "Chapter deleted." });
                             } catch (err: any) {
                               const msg = err?.message ?? "Delete failed.";
-                              setError(msg);
                               addToast({ type: "error", message: msg });
                             } finally {
                               setBusy(false);
@@ -673,7 +656,6 @@ export default function AdminDashboard() {
                           onClick={async (e) => {
                             e.stopPropagation();
                             setBusy(true);
-                            setError(null);
                             try {
                               await deleteOpportunity(o.id);
                               await refreshAll();
@@ -681,7 +663,6 @@ export default function AdminDashboard() {
                               addToast({ type: "success", message: "Opportunity deleted." });
                             } catch (err: any) {
                               const msg = err?.message ?? "Delete failed.";
-                              setError(msg);
                               addToast({ type: "error", message: msg });
                             } finally {
                               setBusy(false);

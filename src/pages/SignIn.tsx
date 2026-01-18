@@ -20,7 +20,6 @@ export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { addToast } = useToast();
 
   const redirectTo = useMemo(() => {
@@ -31,8 +30,6 @@ export default function SignIn() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setError(null);
-
     try {
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
@@ -46,7 +43,6 @@ export default function SignIn() {
         await supabase.auth.signOut();
         const message =
           "Your account is not provisioned yet (no profile role assigned). Ask the admin to create your profile in the database.";
-        setError(message);
         addToast({ type: "error", message });
         return;
       }
@@ -54,7 +50,6 @@ export default function SignIn() {
       if (profile.role !== role) {
         await supabase.auth.signOut();
         const message = `Role mismatch. Your account is '${profile.role}', but you tried to sign in as '${role}'.`;
-        setError(message);
         addToast({ type: "error", message });
         return;
       }
@@ -63,7 +58,6 @@ export default function SignIn() {
       navigate(`${redirectTo}${separator}signed_in=1`, { replace: true });
     } catch (err: any) {
       const message = err?.message ?? "Sign-in failed.";
-      setError(message);
       addToast({ type: "error", message });
     } finally {
       setBusy(false);

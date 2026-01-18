@@ -31,7 +31,6 @@ export default function Home() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [programs, setPrograms] = useState<Program[]>([]);
   const [chapters, setChapters] = useState<Chapter[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [params, setParams] = useSearchParams();
   const { addToast } = useToast();
 
@@ -39,8 +38,6 @@ export default function Home() {
     let alive = true;
 
     (async () => {
-      setError(null);
-
       const [s, p, c] = await Promise.allSettled([
         getSiteSettings(),
         listPrograms(3),
@@ -66,7 +63,6 @@ export default function Home() {
 
       if (s.status === "rejected" && p.status === "rejected" && c.status === "rejected") {
         const msg = "Failed to load homepage content. Please refresh.";
-        setError(msg);
         addToast({ type: "error", message: msg });
       }
     })();

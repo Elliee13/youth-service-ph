@@ -25,7 +25,6 @@ export default function ChapterHeadDashboard() {
 
   const [opps, setOpps] = useState<OpportunityRow[]>([]);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [params, setParams] = useSearchParams();
   const { addToast } = useToast();
 
@@ -41,7 +40,6 @@ export default function ChapterHeadDashboard() {
   }, [opps, chapterId]);
 
   async function refresh() {
-    setError(null);
     const all = await listOpportunities();
     setOpps(all);
   }
@@ -49,7 +47,6 @@ export default function ChapterHeadDashboard() {
   useEffect(() => {
     refresh().catch((e: any) => {
       const msg = e?.message ?? "Failed to load opportunities.";
-      setError(msg);
       addToast({ type: "error", message: msg });
     });
   }, [addToast]);
@@ -73,17 +70,14 @@ export default function ChapterHeadDashboard() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setError(null);
     try {
       if (!chapterId) {
         const msg = "Your account does not have a chapter assigned yet.";
-        setError(msg);
         addToast({ type: "error", message: msg });
         return;
       }
       if (!name.trim() || !date) {
         const msg = "Event name and date are required.";
-        setError(msg);
         addToast({ type: "error", message: msg });
         return;
       }
@@ -113,7 +107,6 @@ export default function ChapterHeadDashboard() {
     } catch (e: any) {
       // If RLS blocks, you’ll see it here (correct behavior)
       const msg = e?.message ?? "Save failed.";
-      setError(msg);
       addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
@@ -195,7 +188,6 @@ export default function ChapterHeadDashboard() {
                         onClick={async (e) => {
                           e.stopPropagation();
                           setBusy(true);
-                          setError(null);
                           try {
                             await deleteOpportunity(o.id);
                             await refresh();
@@ -203,7 +195,6 @@ export default function ChapterHeadDashboard() {
                             addToast({ type: "success", message: "Opportunity deleted." });
                           } catch (err: any) {
                             const msg = err?.message ?? "Delete failed.";
-                            setError(msg);
                             addToast({ type: "error", message: msg });
                           } finally {
                             setBusy(false);
