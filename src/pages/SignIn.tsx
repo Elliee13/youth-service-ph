@@ -9,6 +9,8 @@ import { normalizeRole } from "../auth/auth.utils";
 import type { Role } from "../auth/auth.types";
 import { useToast } from "../components/ui/ToastProvider";
 
+const GENERIC_SIGNIN_ERROR = "Sign-in failed. Please check your credentials or contact support.";
+
 export default function SignIn() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
@@ -41,16 +43,22 @@ export default function SignIn() {
 
       if (!profile) {
         await supabase.auth.signOut();
-        const message =
-          "Your account is not provisioned yet (no profile role assigned). Ask the admin to create your profile in the database.";
-        addToast({ type: "error", message });
+        if (import.meta.env.DEV) {
+          console.warn("[SignIn] blocked sign-in: missing profile row for authenticated user.");
+        }
+        addToast({ type: "error", message: GENERIC_SIGNIN_ERROR });
         return;
       }
 
       if (profile.role !== role) {
         await supabase.auth.signOut();
-        const message = `Role mismatch. Your account is '${profile.role}', but you tried to sign in as '${role}'.`;
-        addToast({ type: "error", message });
+        if (import.meta.env.DEV) {
+          console.warn("[SignIn] blocked sign-in: role mismatch.", {
+            expectedRole: role,
+            actualRole: profile.role,
+          });
+        }
+        addToast({ type: "error", message: GENERIC_SIGNIN_ERROR });
         return;
       }
 
@@ -175,8 +183,7 @@ export default function SignIn() {
               </Button>
 
               <div className="text-xs text-black/55">
-                If you can sign in but see “not provisioned,” your profile row
-                hasn’t been created yet.
+                If you can�t sign in, please contact support.
               </div>
             </form>
           </Card>
@@ -185,3 +192,4 @@ export default function SignIn() {
     </div>
   );
 }
+

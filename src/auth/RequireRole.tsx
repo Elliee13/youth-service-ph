@@ -3,6 +3,8 @@ import { Navigate, useLocation } from "react-router-dom";
 import type { Role } from "./auth.types";
 import { useAuth } from "./AuthProvider";
 
+const GENERIC_SIGNIN_ERROR = "Sign-in failed. Please check your credentials or contact support.";
+
 export function RequireRole({
   role,
   children,
@@ -26,31 +28,37 @@ export function RequireRole({
     return <Navigate to={`/sign-in?role=${role}`} replace state={{ from: location.pathname }} />;
   }
 
-  // Signed in but not provisioned in profiles table
   if (!profile) {
-    return (
-      <div className="py-16">
-        <div className="[font-family:var(--font-display)] text-3xl tracking-[-0.02em]">
-          Access not provisioned
-        </div>
-        <p className="mt-3 max-w-xl text-sm leading-6 text-black/65">
-          Your account exists, but it hasn’t been assigned a role yet. Ask the admin to create your
-          profile record in the database.
-        </p>
-      </div>
-    );
-  }
-
-  if (profile.role !== role) {
+    if (import.meta.env.DEV) {
+      console.warn("[RequireRole] blocked access: authenticated user has no profile.", {
+        expectedRole: role,
+        path: location.pathname,
+      });
+    }
     return (
       <div className="py-16">
         <div className="[font-family:var(--font-display)] text-3xl tracking-[-0.02em]">
           Restricted
         </div>
-        <p className="mt-3 max-w-xl text-sm leading-6 text-black/65">
-          You’re signed in as <span className="font-semibold">{profile.role}</span> but tried to access{" "}
-          <span className="font-semibold">{role}</span> routes.
-        </p>
+        <p className="mt-3 max-w-xl text-sm leading-6 text-black/65">{GENERIC_SIGNIN_ERROR}</p>
+      </div>
+    );
+  }
+
+  if (profile.role !== role) {
+    if (import.meta.env.DEV) {
+      console.warn("[RequireRole] blocked access: role mismatch.", {
+        expectedRole: role,
+        actualRole: profile.role,
+        path: location.pathname,
+      });
+    }
+    return (
+      <div className="py-16">
+        <div className="[font-family:var(--font-display)] text-3xl tracking-[-0.02em]">
+          Restricted
+        </div>
+        <p className="mt-3 max-w-xl text-sm leading-6 text-black/65">{GENERIC_SIGNIN_ERROR}</p>
       </div>
     );
   }

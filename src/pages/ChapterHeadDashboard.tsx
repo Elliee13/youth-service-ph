@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { CmsShell } from "../components/cms/CmsShell";
 import { Card } from "../components/ui/Card";
@@ -34,22 +34,21 @@ export default function ChapterHeadDashboard() {
   const [sdgs, setSdgs] = useState("SDG 4, SDG 10");
   const [contact, setContact] = useState("");
 
-  const scopedOpps = useMemo(() => {
-    if (!chapterId) return [];
-    return opps.filter((o) => o.chapter_id === chapterId);
-  }, [opps, chapterId]);
-
-  async function refresh() {
-    const all = await listOpportunities();
-    setOpps(all);
-  }
+  const refresh = useCallback(async () => {
+    if (!chapterId) {
+      setOpps([]);
+      return;
+    }
+    const scoped = await listOpportunities(chapterId);
+    setOpps(scoped);
+  }, [chapterId]);
 
   useEffect(() => {
     refresh().catch((e: any) => {
       const msg = e?.message ?? "Failed to load opportunities.";
       addToast({ type: "error", message: msg });
     });
-  }, [addToast]);
+  }, [addToast, refresh]);
 
   useEffect(() => {
     if (params.get("signed_in") === "1") {
@@ -168,7 +167,7 @@ export default function ChapterHeadDashboard() {
               </div>
 
               <div className="divide-y divide-black/10">
-                {scopedOpps.map((o) => (
+                {opps.map((o) => (
                   <div
                     key={o.id}
                     className="grid cursor-pointer grid-cols-12 gap-3 py-4 text-sm hover:bg-black/[0.02]"

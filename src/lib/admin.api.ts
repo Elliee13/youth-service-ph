@@ -99,11 +99,15 @@ export async function adminDeleteChapter(id: string) {
 }
 
 // --------------- Opportunities --------------
-export async function listOpportunities(): Promise<OpportunityRow[]> {
-  const { data, error } = await supabase
+export async function listOpportunities(chapterId?: string): Promise<OpportunityRow[]> {
+  let q = supabase
     .from("volunteer_opportunities")
     .select("id, event_name, event_date, chapter_id, sdgs, contact_details, created_at")
     .order("event_date", { ascending: true });
+
+  if (chapterId) q = q.eq("chapter_id", chapterId);
+
+  const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as OpportunityRow[];
 }
