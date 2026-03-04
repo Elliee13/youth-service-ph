@@ -26,6 +26,10 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+function asStringId(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
 export default function SupabaseStatus() {
   const env = import.meta.env;
   const [status, setStatus] = useState<Status>(() => ({
@@ -78,8 +82,8 @@ export default function SupabaseStatus() {
           programsLen: programsRes.error ? "error" : (programsRes.data?.length ?? 0),
           chaptersLen: chaptersRes.error ? "error" : (chaptersRes.data?.length ?? 0),
 
-          programsFirstId: programsRes.data?.[0]?.id,
-          chaptersFirstId: chaptersRes.data?.[0]?.id,
+          programsFirstId: asStringId(programsRes.data?.[0]?.id),
+          chaptersFirstId: asStringId(chaptersRes.data?.[0]?.id),
 
           siteSettings: settingsRes.error ? "error" : settingsRes.data ? "ok" : "missing",
           lastError: err,

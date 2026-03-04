@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
+import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import { fetchMyProfile } from "../lib/profile.service";
+import type { Profile } from "./auth.types";
 import { AuthContext, type AuthState } from "./AuthContext";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
