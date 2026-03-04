@@ -11,9 +11,17 @@ import {
   type VolunteerSignup,
 } from "../lib/public.api";
 import { SignUpModal } from "../components/volunteer/SignUpModal";
-import { useAuth } from "../auth/AuthProvider";
+import { useAuth } from "../auth/useAuth";
 import { Link } from "react-router-dom";
-import { useToast } from "../components/ui/ToastProvider";
+import { useToast } from "../components/ui/useToast";
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return fallback;
+}
 
 export default function VolunteerOpportunities() {
   const scope = useRef<HTMLDivElement | null>(null);
@@ -34,32 +42,34 @@ export default function VolunteerOpportunities() {
         const data = await listVolunteerOpportunities();
         if (!alive) return;
         setItems(data);
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (!alive) return;
-        const msg = e?.message ?? "Failed to load opportunities.";
+        const msg = getErrorMessage(e, "Failed to load opportunities.");
         addToast({ type: "error", message: msg });
       }
     })();
     return () => {
       alive = false;
     };
-  }, []);
+  }, [addToast]);
 
   useEffect(() => {
     let alive = true;
-    if (!user) {
-      setMySignups([]);
-      return;
-    }
-
     (async () => {
+      if (!user) {
+        await Promise.resolve();
+        if (!alive) return;
+        setMySignups([]);
+        return;
+      }
+
       try {
         const data = await listMyVolunteerSignups();
         if (!alive) return;
         setMySignups(data);
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (!alive) return;
-        const msg = e?.message ?? "Failed to load your signups.";
+        const msg = getErrorMessage(e, "Failed to load your signups.");
         addToast({ type: "error", message: msg });
       }
     })();
@@ -67,7 +77,7 @@ export default function VolunteerOpportunities() {
     return () => {
       alive = false;
     };
-  }, [user]);
+  }, [user, addToast]);
 
   return (
     <div ref={scope}>
@@ -172,12 +182,12 @@ export default function VolunteerOpportunities() {
         <Section
           eyebrow="My activity"
           title="Your signups"
-          description="A quick log of the opportunities you’ve registered for."
+          description="A quick log of the opportunities you've registered for."
         >
 
           {mySignups.length === 0 ? (
             <div className="rounded-2xl border border-black/10 bg-white p-5 text-sm text-black/60">
-              You haven’t signed up yet. Pick an opportunity above to get started.
+              You haven't signed up yet. Pick an opportunity above to get started.
             </div>
           ) : null}
 

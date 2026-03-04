@@ -3,7 +3,7 @@ import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { Field, Input, Textarea } from "../cms/Field";
 import { getMyPublicUser, type VolunteerSignupInput } from "../../lib/public.api";
-import { useToast } from "../ui/ToastProvider";
+import { useToast } from "../ui/useToast";
 
 type Props = {
   opportunityId: string;

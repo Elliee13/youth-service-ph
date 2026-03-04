@@ -6,7 +6,7 @@ import { Container } from "../components/ui/Container";
 import { useGsapReveal } from "../hooks/useGsapReveal";
 import { listPrograms, type Program } from "../lib/public.api";
 import { Button } from "../components/ui/Button";
-import { useToast } from "../components/ui/ToastProvider";
+import { useToast } from "../components/ui/useToast";
 
 const FALLBACK_PROGRAM_IMAGE =
   "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=75";

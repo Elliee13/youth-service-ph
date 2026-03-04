@@ -1,7 +1,7 @@
 import { NavLink, Link } from "react-router-dom";
 import yspLogo from "../../assets/ysp-logo.png";
 import { Button } from "../ui/Button";
-import { useAuth } from "../../auth/AuthProvider";
+import { useAuth } from "../../auth/useAuth";
 
 const nav = [
   { label: "Home", to: "/" },

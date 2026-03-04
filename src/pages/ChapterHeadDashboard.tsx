@@ -5,7 +5,7 @@ import { Card } from "../components/ui/Card";
 import { DataTable } from "../components/cms/DataTable";
 import { Field, Input, Textarea } from "../components/cms/Field";
 import { FormActions } from "../components/cms/FormActions";
-import { useAuth } from "../auth/AuthProvider";
+import { useAuth } from "../auth/useAuth";
 import { useGsapReveal } from "../hooks/useGsapReveal";
 import {
   createOpportunity,
@@ -14,7 +14,7 @@ import {
   updateOpportunity,
   type OpportunityRow,
 } from "../lib/admin.api";
-import { useToast } from "../components/ui/ToastProvider";
+import { useToast } from "../components/ui/useToast";
 
 export default function ChapterHeadDashboard() {
   const scope = useRef<HTMLDivElement | null>(null);

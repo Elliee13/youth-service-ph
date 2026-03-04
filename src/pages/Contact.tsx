@@ -4,7 +4,7 @@ import { Section } from "../components/ui/Section";
 import { Container } from "../components/ui/Container";
 import { useGsapReveal } from "../hooks/useGsapReveal";
 import { getSiteSettings, type SiteSettings } from "../lib/public.api";
-import { useToast } from "../components/ui/ToastProvider";
+import { useToast } from "../components/ui/useToast";
 
 export default function Contact() {
   const scope = useRef<HTMLDivElement | null>(null);

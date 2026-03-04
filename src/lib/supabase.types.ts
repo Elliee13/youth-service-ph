@@ -1,3 +1,7 @@
-// Placeholder until you generate types from Supabase.
-// In Phase 3.4 we’ll replace this with real generated DB types.
-export type Database = any;
+// Placeholder until generated Supabase types are added.
+// This keeps createClient typed without using `any`.
+import type { GenericSchema } from "@supabase/supabase-js";
+
+export type Database = {
+  public: GenericSchema;
+};

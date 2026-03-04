@@ -1,7 +1,7 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import type { Role } from "./auth.types";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "./useAuth";
 
 const GENERIC_SIGNIN_ERROR = "Sign-in failed. Please check your credentials or contact support.";
 

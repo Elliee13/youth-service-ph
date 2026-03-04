@@ -7,9 +7,17 @@ import { supabase } from "../lib/supabase";
 import { fetchMyProfile } from "../lib/profile.service";
 import { normalizeRole } from "../auth/auth.utils";
 import type { Role } from "../auth/auth.types";
-import { useToast } from "../components/ui/ToastProvider";
+import { useToast } from "../components/ui/useToast";
 
 const GENERIC_SIGNIN_ERROR = "Sign-in failed. Please check your credentials or contact support.";
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return fallback;
+}
 
 export default function SignIn() {
   const [params] = useSearchParams();
@@ -64,8 +72,8 @@ export default function SignIn() {
 
       const separator = redirectTo.includes("?") ? "&" : "?";
       navigate(`${redirectTo}${separator}signed_in=1`, { replace: true });
-    } catch (err: any) {
-      const message = err?.message ?? "Sign-in failed.";
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, "Sign-in failed.");
       addToast({ type: "error", message });
     } finally {
       setBusy(false);
@@ -183,7 +191,7 @@ export default function SignIn() {
               </Button>
 
               <div className="text-xs text-black/55">
-                If you can’t sign in, please contact support.
+                If you can't sign in, please contact support.
               </div>
             </form>
           </Card>

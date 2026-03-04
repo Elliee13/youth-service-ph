@@ -27,7 +27,7 @@ import {
   type SiteSettingsRow,
 } from "../lib/admin.api";
 import { uploadProgramImage } from "../lib/storage";
-import { useToast } from "../components/ui/ToastProvider";
+import { useToast } from "../components/ui/useToast";
 
 type Tab = "programs" | "chapters" | "opportunities" | "settings";
 

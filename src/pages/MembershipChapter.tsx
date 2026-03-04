@@ -6,7 +6,7 @@ import { useGsapReveal } from "../hooks/useGsapReveal";
 import { Link } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { listChapters, type Chapter } from "../lib/public.api";
-import { useToast } from "../components/ui/ToastProvider";
+import { useToast } from "../components/ui/useToast";
 
 const MEMBERSHIP_FORM_EMBED_URL =
   "https://docs.google.com/forms/d/e/1FAIpQLSdwMKgIjQNrlLH-j-Qdx0MrKxefxaLRC6gMI_oOgMTosDi_sQ/viewform?embedded=true";

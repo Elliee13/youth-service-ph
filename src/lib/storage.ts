@@ -9,7 +9,7 @@ export async function uploadProgramImage(file: File, programId: string) {
     .upload(path, file, {
       cacheControl: "3600",
       upsert: true,
-      contentType: file.type || "image/jpeg" || "image/jpg",
+      contentType: file.type || "image/jpeg",
     });
 
   if (error) throw error;

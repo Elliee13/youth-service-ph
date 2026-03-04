@@ -46,9 +46,19 @@ export type PublicUser = {
   created_at: string;
 };
 
-function logAndThrow(scope: string, error: any) {
+function getErrorMessage(error: unknown) {
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return "Unknown error";
+}
+
+function logAndThrow(scope: string, error: unknown): never {
   console.error(`[public.api] ${scope}`, error);
-  throw error;
+  if (error instanceof Error) throw error;
+  if (error && typeof error === "object") throw error;
+  throw new Error(getErrorMessage(error));
 }
 
 export async function getSiteSettings(): Promise<SiteSettings> {
