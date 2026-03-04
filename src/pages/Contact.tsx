@@ -6,6 +6,14 @@ import { useGsapReveal } from "../hooks/useGsapReveal";
 import { getSiteSettings, type SiteSettings } from "../lib/public.api";
 import { useToast } from "../components/ui/useToast";
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return fallback;
+}
+
 export default function Contact() {
   const scope = useRef<HTMLDivElement | null>(null);
   useGsapReveal(scope);
@@ -20,16 +28,16 @@ export default function Contact() {
         const s = await getSiteSettings();
         if (!alive) return;
         setSettings(s);
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (!alive) return;
-        const msg = e?.message ?? "Failed to load contact details.";
+        const msg = getErrorMessage(e, "Failed to load contact details.");
         addToast({ type: "error", message: msg });
       }
     })();
     return () => {
       alive = false;
     };
-  }, []);
+  }, [addToast]);
 
   const email = settings?.contact_email ?? "phyouthservice@gmail.com";
   const facebook = settings?.contact_facebook ?? "https://www.facebook.com/YOUTHSERVICEPHILIPPINES";

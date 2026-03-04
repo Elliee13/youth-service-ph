@@ -11,6 +11,14 @@ import { useToast } from "../components/ui/useToast";
 const FALLBACK_PROGRAM_IMAGE =
   "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=75";
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return fallback;
+}
+
 export default function Programs() {
   const scope = useRef<HTMLDivElement | null>(null);
   useGsapReveal(scope);
@@ -25,16 +33,16 @@ export default function Programs() {
         const p = await listPrograms();
         if (!alive) return;
         setPrograms(p);
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (!alive) return;
-        const msg = e?.message ?? "Failed to load programs.";
+        const msg = getErrorMessage(e, "Failed to load programs.");
         addToast({ type: "error", message: msg });
       }
     })();
     return () => {
       alive = false;
     };
-  }, []);
+  }, [addToast]);
 
   return (
     <div ref={scope}>

@@ -15,6 +15,14 @@ import {
   type VolunteerSignup,
 } from "../lib/public.api";
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return fallback;
+}
+
 export default function MyAccount() {
   const scope = useRef<HTMLDivElement | null>(null);
   useGsapReveal(scope);
@@ -48,9 +56,9 @@ export default function MyAccount() {
         setFullName(data?.full_name ?? "");
         setEmail(data?.email ?? user.email ?? "");
         setPhone(data?.phone ?? "");
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (!alive) return;
-        const msg = e?.message ?? "Failed to load profile.";
+        const msg = getErrorMessage(e, "Failed to load profile.");
         addToast({ type: "error", message: msg });
       }
     })();
@@ -58,7 +66,7 @@ export default function MyAccount() {
     return () => {
       alive = false;
     };
-  }, [user, profile?.role]);
+  }, [user, profile?.role, addToast]);
 
   useEffect(() => {
     if (!user) {
@@ -87,7 +95,7 @@ export default function MyAccount() {
       params.delete("error_description");
       setParams(params, { replace: true });
     }
-  }, [params, setParams]);
+  }, [params, setParams, addToast]);
 
   useEffect(() => {
     if (!user) return;
@@ -112,8 +120,8 @@ export default function MyAccount() {
         phone: phone.trim(),
       });
       addToast({ type: "success", message: "Profile updated." });
-    } catch (e: any) {
-      addToast({ type: "error", message: e?.message ?? "Update failed." });
+    } catch (e: unknown) {
+      addToast({ type: "error", message: getErrorMessage(e, "Update failed.") });
     } finally {
       setBusy(false);
     }

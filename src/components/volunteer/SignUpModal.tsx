@@ -14,6 +14,22 @@ type Props = {
   onSuccess: () => void;
 };
 
+type ErrorWithCodeAndMessage = {
+  code?: string;
+  message?: string;
+};
+
+function getErrorDetails(error: unknown) {
+  if (error && typeof error === "object") {
+    const maybe = error as ErrorWithCodeAndMessage;
+    return {
+      code: typeof maybe.code === "string" ? maybe.code : "",
+      message: typeof maybe.message === "string" ? maybe.message : "",
+    };
+  }
+  return { code: "", message: "" };
+}
+
 export function SignUpModal({
   opportunityId,
   opportunityName,
@@ -88,9 +104,8 @@ export function SignUpModal({
 
       onSuccess();
       onClose();
-    } catch (e: any) {
-      const raw = e?.message ?? "";
-      const code = e?.code;
+    } catch (e: unknown) {
+      const { code, message: raw } = getErrorDetails(e);
       const msg =
         code === "23505" || raw.toLowerCase().includes("unique_signup")
         ? "Already applied for this opportunity."

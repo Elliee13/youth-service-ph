@@ -10,6 +10,14 @@ import { useToast } from "../components/ui/useToast";
 const FALLBACK_PROGRAM_IMAGE =
   "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=2000&q=75";
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return fallback;
+}
+
 export default function ProgramDetail() {
   const { id } = useParams();
   const scope = useRef<HTMLDivElement | null>(null);
@@ -32,9 +40,9 @@ export default function ProgramDetail() {
         const p = await getProgramById(id);
         if (!alive) return;
         setProgram(p);
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (!alive) return;
-        const msg = e?.message ?? "Failed to load program.";
+        const msg = getErrorMessage(e, "Failed to load program.");
         setError(msg);
         addToast({ type: "error", message: msg });
       } finally {
@@ -44,7 +52,7 @@ export default function ProgramDetail() {
     return () => {
       alive = false;
     };
-  }, [id]);
+  }, [id, addToast]);
 
   if (loading) {
     return (

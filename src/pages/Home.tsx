@@ -70,7 +70,7 @@ export default function Home() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [addToast]);
 
   useEffect(() => {
     if (params.get("signed_out") === "1") {

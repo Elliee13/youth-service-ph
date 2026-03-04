@@ -31,6 +31,14 @@ type GoogleFormEmbedProps = {
   fallbackUrl: string;
 };
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return fallback;
+}
+
 function GoogleFormEmbed({ title, embedUrl, fallbackUrl }: GoogleFormEmbedProps) {
   return (
     <div className="overflow-x-hidden">
@@ -74,10 +82,10 @@ export default function MembershipChapter() {
         const c = await listChapters();
         if (!alive) return;
         setChapters(c);
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (!alive) return;
         console.warn("[MembershipChapter] listChapters failed:", e);
-        const msg = e?.message ?? "Failed to load chapters.";
+        const msg = getErrorMessage(e, "Failed to load chapters.");
         addToast({ type: "error", message: msg });
         setChapters([]);
       }
@@ -85,7 +93,7 @@ export default function MembershipChapter() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [addToast]);
 
   return (
     <div ref={scope}>

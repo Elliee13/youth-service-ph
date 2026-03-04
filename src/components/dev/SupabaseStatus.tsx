@@ -16,11 +16,21 @@ type Status = {
   lastError?: string;
 };
 
+type ErrorWithMessage = { message?: string };
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as ErrorWithMessage).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return fallback;
+}
+
 export default function SupabaseStatus() {
+  const env = import.meta.env;
   const [status, setStatus] = useState<Status>(() => ({
-    projectUrl: (import.meta as any).env?.VITE_SUPABASE_URL ?? "(missing)",
-    anonKeyPrefix:
-      ((import.meta as any).env?.VITE_SUPABASE_ANON_KEY ?? "").slice(0, 12) || "(missing)",
+    projectUrl: env.VITE_SUPABASE_URL ?? "(missing)",
+    anonKeyPrefix: (env.VITE_SUPABASE_ANON_KEY ?? "").slice(0, 12) || "(missing)",
     session: "none",
     programsLen: 0,
     chaptersLen: 0,
@@ -74,7 +84,7 @@ export default function SupabaseStatus() {
           siteSettings: settingsRes.error ? "error" : settingsRes.data ? "ok" : "missing",
           lastError: err,
         }));
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (!alive) return;
         setStatus((s) => ({
           ...s,
@@ -82,7 +92,7 @@ export default function SupabaseStatus() {
           programsLen: "error",
           chaptersLen: "error",
           siteSettings: "error",
-          lastError: e?.message ?? String(e),
+          lastError: getErrorMessage(e, String(e)),
         }));
       }
     })();

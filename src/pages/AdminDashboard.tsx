@@ -30,6 +30,22 @@ import { uploadProgramImage } from "../lib/storage";
 import { useToast } from "../components/ui/useToast";
 
 type Tab = "programs" | "chapters" | "opportunities" | "settings";
+type PostgrestLikeError = { code?: string; message?: string };
+
+function isPostgrestLikeError(error: unknown): error is PostgrestLikeError {
+  if (!error || typeof error !== "object") return false;
+  if (!("message" in error)) return false;
+  const maybe = error as { message?: unknown; code?: unknown };
+  const messageOk = typeof maybe.message === "string";
+  const codeOk = maybe.code == null || typeof maybe.code === "string";
+  return messageOk && codeOk;
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (isPostgrestLikeError(error) && error.message) return error.message;
+  if (error instanceof Error && error.message) return error.message;
+  return fallback;
+}
 
 export default function AdminDashboard() {
   const scope = useRef<HTMLDivElement | null>(null);
@@ -110,8 +126,8 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
-    refreshAll().catch((e: any) => {
-      const msg = e?.message ?? "Failed to load dashboard.";
+    refreshAll().catch((e: unknown) => {
+      const msg = getErrorMessage(e, "Failed to load dashboard.");
       addToast({ type: "error", message: msg });
     });
   }, [addToast]);
@@ -157,8 +173,8 @@ export default function AdminDashboard() {
       const { publicUrl } = await uploadProgramImage(file, programId);
       setPImageUrl(publicUrl);
       addToast({ type: "success", message: "Image uploaded." });
-    } catch (e: any) {
-      const msg = e?.message ?? "Image upload failed.";
+    } catch (e: unknown) {
+      const msg = getErrorMessage(e, "Image upload failed.");
       addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
@@ -192,8 +208,8 @@ export default function AdminDashboard() {
 
       await refreshAll();
       clearProgramForm();
-    } catch (e: any) {
-      const msg = e?.message ?? "Failed to save program.";
+    } catch (e: unknown) {
+      const msg = getErrorMessage(e, "Failed to save program.");
       addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
@@ -209,7 +225,7 @@ export default function AdminDashboard() {
         return;
       }
 
-      const payload = {
+      const payload: Omit<ChapterRow, "id" | "created_at"> = {
         name: cName.trim(),
         description: cDesc.trim() || null,
         location: cLocation.trim() || null,
@@ -222,14 +238,14 @@ export default function AdminDashboard() {
         await adminUpdateChapter(cEditId, payload);
         addToast({ type: "success", message: "Chapter updated." });
       } else {
-        await adminCreateChapter(payload as any);
+        await adminCreateChapter(payload);
         addToast({ type: "success", message: "Chapter created." });
       }
 
       await refreshAll();
       clearChapterForm();
-    } catch (e: any) {
-      const msg = e?.message ?? "Failed to save chapter.";
+    } catch (e: unknown) {
+      const msg = getErrorMessage(e, "Failed to save chapter.");
       addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
@@ -268,8 +284,8 @@ export default function AdminDashboard() {
 
       await refreshAll();
       clearOppForm();
-    } catch (e: any) {
-      const msg = e?.message ?? "Failed to save opportunity.";
+    } catch (e: unknown) {
+      const msg = getErrorMessage(e, "Failed to save opportunity.");
       addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
@@ -291,8 +307,8 @@ export default function AdminDashboard() {
 
       await refreshAll();
       addToast({ type: "success", message: "Site settings updated." });
-    } catch (e: any) {
-      const msg = e?.message ?? "Failed to update site settings.";
+    } catch (e: unknown) {
+      const msg = getErrorMessage(e, "Failed to update site settings.");
       addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
@@ -448,8 +464,8 @@ export default function AdminDashboard() {
                               await refreshAll();
                               if (pEditId === p.id) clearProgramForm();
                               addToast({ type: "success", message: "Program deleted." });
-                            } catch (err: any) {
-                              const msg = err?.message ?? "Delete failed.";
+                            } catch (err: unknown) {
+                              const msg = getErrorMessage(err, "Delete failed.");
                               addToast({ type: "error", message: msg });
                             } finally {
                               setBusy(false);
@@ -553,8 +569,8 @@ export default function AdminDashboard() {
                               await refreshAll();
                               if (cEditId === c.id) clearChapterForm();
                               addToast({ type: "success", message: "Chapter deleted." });
-                            } catch (err: any) {
-                              const msg = err?.message ?? "Delete failed.";
+                            } catch (err: unknown) {
+                              const msg = getErrorMessage(err, "Delete failed.");
                               addToast({ type: "error", message: msg });
                             } finally {
                               setBusy(false);
@@ -661,8 +677,8 @@ export default function AdminDashboard() {
                               await refreshAll();
                               if (oEditId === o.id) clearOppForm();
                               addToast({ type: "success", message: "Opportunity deleted." });
-                            } catch (err: any) {
-                              const msg = err?.message ?? "Delete failed.";
+                            } catch (err: unknown) {
+                              const msg = getErrorMessage(err, "Delete failed.");
                               addToast({ type: "error", message: msg });
                             } finally {
                               setBusy(false);

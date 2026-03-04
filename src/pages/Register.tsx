@@ -6,6 +6,14 @@ import { Container } from "../components/ui/Container";
 import { supabase } from "../lib/supabase";
 import { useToast } from "../components/ui/useToast";
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return fallback;
+}
+
 export default function Register() {
   const navigate = useNavigate();
 
@@ -43,8 +51,8 @@ export default function Register() {
 
       const info = "Check your email to confirm your account before signing in.";
       addToast({ type: "success", message: info });
-    } catch (err: any) {
-      const msg = err?.message ?? "Registration failed.";
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, "Registration failed.");
       addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
@@ -62,8 +70,8 @@ export default function Register() {
       if (signInError) throw signInError;
       localStorage.setItem("ysp_auth_notice", "signed_in");
       navigate("/my-account?signed_in=1", { replace: true });
-    } catch (err: any) {
-      const msg = err?.message ?? "Sign-in failed.";
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, "Sign-in failed.");
       addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
@@ -81,8 +89,8 @@ export default function Register() {
         },
       });
       if (oauthError) throw oauthError;
-    } catch (err: any) {
-      const msg = err?.message ?? "Google sign-in failed.";
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, "Google sign-in failed.");
       addToast({ type: "error", message: msg });
       setBusy(false);
     }

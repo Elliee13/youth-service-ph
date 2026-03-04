@@ -16,6 +16,23 @@ import {
 } from "../lib/admin.api";
 import { useToast } from "../components/ui/useToast";
 
+type PostgrestLikeError = { code?: string; message?: string };
+
+function isPostgrestLikeError(error: unknown): error is PostgrestLikeError {
+  if (!error || typeof error !== "object") return false;
+  if (!("message" in error)) return false;
+  const maybe = error as { message?: unknown; code?: unknown };
+  const messageOk = typeof maybe.message === "string";
+  const codeOk = maybe.code == null || typeof maybe.code === "string";
+  return messageOk && codeOk;
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (isPostgrestLikeError(error) && error.message) return error.message;
+  if (error instanceof Error && error.message) return error.message;
+  return fallback;
+}
+
 export default function ChapterHeadDashboard() {
   const scope = useRef<HTMLDivElement | null>(null);
   useGsapReveal(scope);
@@ -44,8 +61,8 @@ export default function ChapterHeadDashboard() {
   }, [chapterId]);
 
   useEffect(() => {
-    refresh().catch((e: any) => {
-      const msg = e?.message ?? "Failed to load opportunities.";
+    refresh().catch((e: unknown) => {
+      const msg = getErrorMessage(e, "Failed to load opportunities.");
       addToast({ type: "error", message: msg });
     });
   }, [addToast, refresh]);
@@ -103,9 +120,9 @@ export default function ChapterHeadDashboard() {
       });
       await refresh();
       clearForm();
-    } catch (e: any) {
+    } catch (e: unknown) {
       // If RLS blocks, you’ll see it here (correct behavior)
-      const msg = e?.message ?? "Save failed.";
+      const msg = getErrorMessage(e, "Save failed.");
       addToast({ type: "error", message: msg });
     } finally {
       setBusy(false);
@@ -192,8 +209,8 @@ export default function ChapterHeadDashboard() {
                             await refresh();
                             if (editId === o.id) clearForm();
                             addToast({ type: "success", message: "Opportunity deleted." });
-                          } catch (err: any) {
-                            const msg = err?.message ?? "Delete failed.";
+                          } catch (err: unknown) {
+                            const msg = getErrorMessage(err, "Delete failed.");
                             addToast({ type: "error", message: msg });
                           } finally {
                             setBusy(false);
