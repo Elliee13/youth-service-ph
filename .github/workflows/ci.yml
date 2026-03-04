@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build_and_lint:
+    name: Build / Lint / Audit (PR-safe)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npm run build
+
+      - run: npm audit --audit-level=high
+
+  rls_smoke:
+    name: RLS Smoke (Privileged)
+    needs: build_and_lint
+    if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    environment: supabase-ci
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Validate required environment secrets
+        shell: bash
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TEST_ADMIN_EMAIL: ${{ secrets.TEST_ADMIN_EMAIL }}
+          TEST_ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
+          TEST_CHAPTER_EMAIL: ${{ secrets.TEST_CHAPTER_EMAIL }}
+          TEST_CHAPTER_PASSWORD: ${{ secrets.TEST_CHAPTER_PASSWORD }}
+          TEST_VOLUNTEER_EMAIL: ${{ secrets.TEST_VOLUNTEER_EMAIL }}
+          TEST_VOLUNTEER_PASSWORD: ${{ secrets.TEST_VOLUNTEER_PASSWORD }}
+        run: |
+          required=(
+            VITE_SUPABASE_URL
+            VITE_SUPABASE_ANON_KEY
+            SUPABASE_SERVICE_ROLE_KEY
+            TEST_ADMIN_EMAIL
+            TEST_ADMIN_PASSWORD
+            TEST_CHAPTER_EMAIL
+            TEST_CHAPTER_PASSWORD
+          )
+
+          missing=0
+          for name in "${required[@]}"; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing required environment secret: $name"
+              missing=1
+            fi
+          done
+
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: RLS smoke tests
+        run: npm run test:rls
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TEST_ADMIN_EMAIL: ${{ secrets.TEST_ADMIN_EMAIL }}
+          TEST_ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
+          TEST_CHAPTER_EMAIL: ${{ secrets.TEST_CHAPTER_EMAIL }}
+          TEST_CHAPTER_PASSWORD: ${{ secrets.TEST_CHAPTER_PASSWORD }}
+          TEST_VOLUNTEER_EMAIL: ${{ secrets.TEST_VOLUNTEER_EMAIL }}
+          TEST_VOLUNTEER_PASSWORD: ${{ secrets.TEST_VOLUNTEER_PASSWORD }}
