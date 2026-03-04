@@ -1,5 +1,7 @@
 /* global process, console */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 type ProfileRow = {
   id: string;
@@ -22,6 +24,36 @@ type ErrorLike = {
 
 const runId = `${Date.now()}`;
 const marker = `[rls-smoke:${runId}]`;
+
+function loadEnvLocalIfPresent() {
+  const envPath = resolve(process.cwd(), ".env.local");
+  if (!existsSync(envPath)) return;
+
+  const raw = readFileSync(envPath, "utf8");
+  const lines = raw.split(/\r?\n/);
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+
+    const match = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);
+    if (!match) continue;
+
+    const key = match[1];
+    let value = match[2];
+
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    if (process.env[key] == null) {
+      process.env[key] = value;
+    }
+  }
+}
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -148,6 +180,8 @@ async function upsertPublicUser(
 }
 
 async function main() {
+  loadEnvLocalIfPresent();
+
   const url = getEnv("VITE_SUPABASE_URL");
   const anonKey = getEnv("VITE_SUPABASE_ANON_KEY");
   const serviceKey = getEnv("SUPABASE_SERVICE_ROLE_KEY");
