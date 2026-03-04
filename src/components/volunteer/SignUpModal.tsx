@@ -26,6 +26,7 @@ export function SignUpModal({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
+  const [website, setWebsite] = useState("");
   const [busy, setBusy] = useState(false);
   const { addToast } = useToast();
 
@@ -53,7 +54,22 @@ export function SignUpModal({
     setBusy(true);
 
     try {
-      if (!fullName.trim() || !email.trim() || !phone.trim()) {
+      if (website.trim()) {
+        addToast({ type: "error", message: "Failed to sign up. Please try again." });
+        return;
+      }
+
+      const normalizedFullName = fullName.trim();
+      const normalizedEmail = email.trim().toLowerCase();
+      const normalizedPhone = phone.trim();
+      const trimmedMessage = message.trim();
+
+      if (trimmedMessage.length > 1000) {
+        addToast({ type: "error", message: "Message must be 1000 characters or less." });
+        return;
+      }
+
+      if (!normalizedFullName || !normalizedEmail || !normalizedPhone) {
         const msg = "Please fill in all required fields.";
         addToast({ type: "error", message: msg });
         return;
@@ -61,10 +77,10 @@ export function SignUpModal({
 
       const input: VolunteerSignupInput = {
         opportunity_id: opportunityId,
-        full_name: fullName.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        message: message.trim() || undefined,
+        full_name: normalizedFullName,
+        email: normalizedEmail,
+        phone: normalizedPhone,
+        message: trimmedMessage || undefined,
       };
 
       const { signUpForOpportunity } = await import("../../lib/public.api");
@@ -74,7 +90,9 @@ export function SignUpModal({
       onClose();
     } catch (e: any) {
       const raw = e?.message ?? "";
-      const msg = raw.includes("unique_signup")
+      const code = e?.code;
+      const msg =
+        code === "23505" || raw.toLowerCase().includes("unique_signup")
         ? "Already applied for this opportunity."
         : raw || "Failed to sign up. Please try again.";
       addToast({ type: "error", message: msg });
@@ -108,6 +126,17 @@ export function SignUpModal({
         </div>
 
         <form onSubmit={handleSubmit} className="grid gap-4">
+          <input
+            id="website"
+            name="website"
+            value={website}
+            onChange={(e) => setWebsite(e.target.value)}
+            autoComplete="off"
+            tabIndex={-1}
+            aria-hidden="true"
+            className="absolute -left-[9999px] top-auto h-0 w-0 overflow-hidden opacity-0"
+          />
+
           <Field label="Full Name" hint="Required">
             <Input
               value={fullName}

@@ -1,0 +1,1951 @@
+{
+    "swagger":  "2.0",
+    "info":  {
+                 "description":  "",
+                 "title":  "standard public schema",
+                 "version":  "14.1"
+             },
+    "host":  "nhidzojakurcceaqhnqm.supabase.co:443",
+    "basePath":  "/",
+    "schemes":  [
+                    "https"
+                ],
+    "consumes":  [
+                     "application/json",
+                     "application/vnd.pgrst.object+json;nulls=stripped",
+                     "application/vnd.pgrst.object+json",
+                     "text/csv"
+                 ],
+    "produces":  [
+                     "application/json",
+                     "application/vnd.pgrst.object+json;nulls=stripped",
+                     "application/vnd.pgrst.object+json",
+                     "text/csv"
+                 ],
+    "paths":  {
+                  "/":  {
+                            "get":  {
+                                        "produces":  [
+                                                         "application/openapi+json",
+                                                         "application/json"
+                                                     ],
+                                        "responses":  {
+                                                          "200":  {
+                                                                      "description":  "OK"
+                                                                  }
+                                                      },
+                                        "summary":  "OpenAPI description (this document)",
+                                        "tags":  [
+                                                     "Introspection"
+                                                 ]
+                                    }
+                        },
+                  "/volunteer_signups":  {
+                                             "get":  {
+                                                         "parameters":  [
+                                                                            {
+                                                                                "$ref":  "#/parameters/rowFilter.volunteer_signups.id"
+                                                                            },
+                                                                            {
+                                                                                "$ref":  "#/parameters/rowFilter.volunteer_signups.opportunity_id"
+                                                                            },
+                                                                            {
+                                                                                "$ref":  "#/parameters/rowFilter.volunteer_signups.full_name"
+                                                                            },
+                                                                            {
+                                                                                "$ref":  "#/parameters/rowFilter.volunteer_signups.email"
+                                                                            },
+                                                                            {
+                                                                                "$ref":  "#/parameters/rowFilter.volunteer_signups.phone"
+                                                                            },
+                                                                            {
+                                                                                "$ref":  "#/parameters/rowFilter.volunteer_signups.message"
+                                                                            },
+                                                                            {
+                                                                                "$ref":  "#/parameters/rowFilter.volunteer_signups.created_at"
+                                                                            },
+                                                                            {
+                                                                                "$ref":  "#/parameters/rowFilter.volunteer_signups.user_id"
+                                                                            },
+                                                                            {
+                                                                                "$ref":  "#/parameters/select"
+                                                                            },
+                                                                            {
+                                                                                "$ref":  "#/parameters/order"
+                                                                            },
+                                                                            {
+                                                                                "$ref":  "#/parameters/range"
+                                                                            },
+                                                                            {
+                                                                                "$ref":  "#/parameters/rangeUnit"
+                                                                            },
+                                                                            {
+                                                                                "$ref":  "#/parameters/offset"
+                                                                            },
+                                                                            {
+                                                                                "$ref":  "#/parameters/limit"
+                                                                            },
+                                                                            {
+                                                                                "$ref":  "#/parameters/preferCount"
+                                                                            }
+                                                                        ],
+                                                         "responses":  {
+                                                                           "200":  {
+                                                                                       "description":  "OK",
+                                                                                       "schema":  {
+                                                                                                      "items":  {
+                                                                                                                    "$ref":  "#/definitions/volunteer_signups"
+                                                                                                                },
+                                                                                                      "type":  "array"
+                                                                                                  }
+                                                                                   },
+                                                                           "206":  {
+                                                                                       "description":  "Partial Content"
+                                                                                   }
+                                                                       },
+                                                         "tags":  [
+                                                                      "volunteer_signups"
+                                                                  ]
+                                                     },
+                                             "post":  {
+                                                          "parameters":  [
+                                                                             {
+                                                                                 "$ref":  "#/parameters/body.volunteer_signups"
+                                                                             },
+                                                                             {
+                                                                                 "$ref":  "#/parameters/select"
+                                                                             },
+                                                                             {
+                                                                                 "$ref":  "#/parameters/preferPost"
+                                                                             }
+                                                                         ],
+                                                          "responses":  {
+                                                                            "201":  {
+                                                                                        "description":  "Created"
+                                                                                    }
+                                                                        },
+                                                          "tags":  [
+                                                                       "volunteer_signups"
+                                                                   ]
+                                                      },
+                                             "delete":  {
+                                                            "parameters":  [
+                                                                               {
+                                                                                   "$ref":  "#/parameters/rowFilter.volunteer_signups.id"
+                                                                               },
+                                                                               {
+                                                                                   "$ref":  "#/parameters/rowFilter.volunteer_signups.opportunity_id"
+                                                                               },
+                                                                               {
+                                                                                   "$ref":  "#/parameters/rowFilter.volunteer_signups.full_name"
+                                                                               },
+                                                                               {
+                                                                                   "$ref":  "#/parameters/rowFilter.volunteer_signups.email"
+                                                                               },
+                                                                               {
+                                                                                   "$ref":  "#/parameters/rowFilter.volunteer_signups.phone"
+                                                                               },
+                                                                               {
+                                                                                   "$ref":  "#/parameters/rowFilter.volunteer_signups.message"
+                                                                               },
+                                                                               {
+                                                                                   "$ref":  "#/parameters/rowFilter.volunteer_signups.created_at"
+                                                                               },
+                                                                               {
+                                                                                   "$ref":  "#/parameters/rowFilter.volunteer_signups.user_id"
+                                                                               },
+                                                                               {
+                                                                                   "$ref":  "#/parameters/preferReturn"
+                                                                               }
+                                                                           ],
+                                                            "responses":  {
+                                                                              "204":  {
+                                                                                          "description":  "No Content"
+                                                                                      }
+                                                                          },
+                                                            "tags":  [
+                                                                         "volunteer_signups"
+                                                                     ]
+                                                        },
+                                             "patch":  {
+                                                           "parameters":  [
+                                                                              {
+                                                                                  "$ref":  "#/parameters/rowFilter.volunteer_signups.id"
+                                                                              },
+                                                                              {
+                                                                                  "$ref":  "#/parameters/rowFilter.volunteer_signups.opportunity_id"
+                                                                              },
+                                                                              {
+                                                                                  "$ref":  "#/parameters/rowFilter.volunteer_signups.full_name"
+                                                                              },
+                                                                              {
+                                                                                  "$ref":  "#/parameters/rowFilter.volunteer_signups.email"
+                                                                              },
+                                                                              {
+                                                                                  "$ref":  "#/parameters/rowFilter.volunteer_signups.phone"
+                                                                              },
+                                                                              {
+                                                                                  "$ref":  "#/parameters/rowFilter.volunteer_signups.message"
+                                                                              },
+                                                                              {
+                                                                                  "$ref":  "#/parameters/rowFilter.volunteer_signups.created_at"
+                                                                              },
+                                                                              {
+                                                                                  "$ref":  "#/parameters/rowFilter.volunteer_signups.user_id"
+                                                                              },
+                                                                              {
+                                                                                  "$ref":  "#/parameters/body.volunteer_signups"
+                                                                              },
+                                                                              {
+                                                                                  "$ref":  "#/parameters/preferReturn"
+                                                                              }
+                                                                          ],
+                                                           "responses":  {
+                                                                             "204":  {
+                                                                                         "description":  "No Content"
+                                                                                     }
+                                                                         },
+                                                           "tags":  [
+                                                                        "volunteer_signups"
+                                                                    ]
+                                                       }
+                                         },
+                  "/profiles":  {
+                                    "get":  {
+                                                "parameters":  [
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.profiles.id"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.profiles.role"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.profiles.chapter_id"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.profiles.created_at"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/select"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/order"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/range"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rangeUnit"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/offset"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/limit"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/preferCount"
+                                                                   }
+                                                               ],
+                                                "responses":  {
+                                                                  "200":  {
+                                                                              "description":  "OK",
+                                                                              "schema":  {
+                                                                                             "items":  {
+                                                                                                           "$ref":  "#/definitions/profiles"
+                                                                                                       },
+                                                                                             "type":  "array"
+                                                                                         }
+                                                                          },
+                                                                  "206":  {
+                                                                              "description":  "Partial Content"
+                                                                          }
+                                                              },
+                                                "tags":  [
+                                                             "profiles"
+                                                         ]
+                                            },
+                                    "post":  {
+                                                 "parameters":  [
+                                                                    {
+                                                                        "$ref":  "#/parameters/body.profiles"
+                                                                    },
+                                                                    {
+                                                                        "$ref":  "#/parameters/select"
+                                                                    },
+                                                                    {
+                                                                        "$ref":  "#/parameters/preferPost"
+                                                                    }
+                                                                ],
+                                                 "responses":  {
+                                                                   "201":  {
+                                                                               "description":  "Created"
+                                                                           }
+                                                               },
+                                                 "tags":  [
+                                                              "profiles"
+                                                          ]
+                                             },
+                                    "delete":  {
+                                                   "parameters":  [
+                                                                      {
+                                                                          "$ref":  "#/parameters/rowFilter.profiles.id"
+                                                                      },
+                                                                      {
+                                                                          "$ref":  "#/parameters/rowFilter.profiles.role"
+                                                                      },
+                                                                      {
+                                                                          "$ref":  "#/parameters/rowFilter.profiles.chapter_id"
+                                                                      },
+                                                                      {
+                                                                          "$ref":  "#/parameters/rowFilter.profiles.created_at"
+                                                                      },
+                                                                      {
+                                                                          "$ref":  "#/parameters/preferReturn"
+                                                                      }
+                                                                  ],
+                                                   "responses":  {
+                                                                     "204":  {
+                                                                                 "description":  "No Content"
+                                                                             }
+                                                                 },
+                                                   "tags":  [
+                                                                "profiles"
+                                                            ]
+                                               },
+                                    "patch":  {
+                                                  "parameters":  [
+                                                                     {
+                                                                         "$ref":  "#/parameters/rowFilter.profiles.id"
+                                                                     },
+                                                                     {
+                                                                         "$ref":  "#/parameters/rowFilter.profiles.role"
+                                                                     },
+                                                                     {
+                                                                         "$ref":  "#/parameters/rowFilter.profiles.chapter_id"
+                                                                     },
+                                                                     {
+                                                                         "$ref":  "#/parameters/rowFilter.profiles.created_at"
+                                                                     },
+                                                                     {
+                                                                         "$ref":  "#/parameters/body.profiles"
+                                                                     },
+                                                                     {
+                                                                         "$ref":  "#/parameters/preferReturn"
+                                                                     }
+                                                                 ],
+                                                  "responses":  {
+                                                                    "204":  {
+                                                                                "description":  "No Content"
+                                                                            }
+                                                                },
+                                                  "tags":  [
+                                                               "profiles"
+                                                           ]
+                                              }
+                                },
+                  "/chapters":  {
+                                    "get":  {
+                                                "parameters":  [
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.chapters.id"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.chapters.name"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.chapters.description"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.chapters.location"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.chapters.contact_name"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.chapters.contact_email"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.chapters.contact_phone"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.chapters.created_at"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/select"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/order"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/range"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rangeUnit"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/offset"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/limit"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/preferCount"
+                                                                   }
+                                                               ],
+                                                "responses":  {
+                                                                  "200":  {
+                                                                              "description":  "OK",
+                                                                              "schema":  {
+                                                                                             "items":  {
+                                                                                                           "$ref":  "#/definitions/chapters"
+                                                                                                       },
+                                                                                             "type":  "array"
+                                                                                         }
+                                                                          },
+                                                                  "206":  {
+                                                                              "description":  "Partial Content"
+                                                                          }
+                                                              },
+                                                "tags":  [
+                                                             "chapters"
+                                                         ]
+                                            },
+                                    "post":  {
+                                                 "parameters":  [
+                                                                    {
+                                                                        "$ref":  "#/parameters/body.chapters"
+                                                                    },
+                                                                    {
+                                                                        "$ref":  "#/parameters/select"
+                                                                    },
+                                                                    {
+                                                                        "$ref":  "#/parameters/preferPost"
+                                                                    }
+                                                                ],
+                                                 "responses":  {
+                                                                   "201":  {
+                                                                               "description":  "Created"
+                                                                           }
+                                                               },
+                                                 "tags":  [
+                                                              "chapters"
+                                                          ]
+                                             },
+                                    "delete":  {
+                                                   "parameters":  [
+                                                                      {
+                                                                          "$ref":  "#/parameters/rowFilter.chapters.id"
+                                                                      },
+                                                                      {
+                                                                          "$ref":  "#/parameters/rowFilter.chapters.name"
+                                                                      },
+                                                                      {
+                                                                          "$ref":  "#/parameters/rowFilter.chapters.description"
+                                                                      },
+                                                                      {
+                                                                          "$ref":  "#/parameters/rowFilter.chapters.location"
+                                                                      },
+                                                                      {
+                                                                          "$ref":  "#/parameters/rowFilter.chapters.contact_name"
+                                                                      },
+                                                                      {
+                                                                          "$ref":  "#/parameters/rowFilter.chapters.contact_email"
+                                                                      },
+                                                                      {
+                                                                          "$ref":  "#/parameters/rowFilter.chapters.contact_phone"
+                                                                      },
+                                                                      {
+                                                                          "$ref":  "#/parameters/rowFilter.chapters.created_at"
+                                                                      },
+                                                                      {
+                                                                          "$ref":  "#/parameters/preferReturn"
+                                                                      }
+                                                                  ],
+                                                   "responses":  {
+                                                                     "204":  {
+                                                                                 "description":  "No Content"
+                                                                             }
+                                                                 },
+                                                   "tags":  [
+                                                                "chapters"
+                                                            ]
+                                               },
+                                    "patch":  {
+                                                  "parameters":  [
+                                                                     {
+                                                                         "$ref":  "#/parameters/rowFilter.chapters.id"
+                                                                     },
+                                                                     {
+                                                                         "$ref":  "#/parameters/rowFilter.chapters.name"
+                                                                     },
+                                                                     {
+                                                                         "$ref":  "#/parameters/rowFilter.chapters.description"
+                                                                     },
+                                                                     {
+                                                                         "$ref":  "#/parameters/rowFilter.chapters.location"
+                                                                     },
+                                                                     {
+                                                                         "$ref":  "#/parameters/rowFilter.chapters.contact_name"
+                                                                     },
+                                                                     {
+                                                                         "$ref":  "#/parameters/rowFilter.chapters.contact_email"
+                                                                     },
+                                                                     {
+                                                                         "$ref":  "#/parameters/rowFilter.chapters.contact_phone"
+                                                                     },
+                                                                     {
+                                                                         "$ref":  "#/parameters/rowFilter.chapters.created_at"
+                                                                     },
+                                                                     {
+                                                                         "$ref":  "#/parameters/body.chapters"
+                                                                     },
+                                                                     {
+                                                                         "$ref":  "#/parameters/preferReturn"
+                                                                     }
+                                                                 ],
+                                                  "responses":  {
+                                                                    "204":  {
+                                                                                "description":  "No Content"
+                                                                            }
+                                                                },
+                                                  "tags":  [
+                                                               "chapters"
+                                                           ]
+                                              }
+                                },
+                  "/site_settings":  {
+                                         "get":  {
+                                                     "parameters":  [
+                                                                        {
+                                                                            "$ref":  "#/parameters/rowFilter.site_settings.id"
+                                                                        },
+                                                                        {
+                                                                            "$ref":  "#/parameters/rowFilter.site_settings.projects_count"
+                                                                        },
+                                                                        {
+                                                                            "$ref":  "#/parameters/rowFilter.site_settings.chapters_count"
+                                                                        },
+                                                                        {
+                                                                            "$ref":  "#/parameters/rowFilter.site_settings.members_count"
+                                                                        },
+                                                                        {
+                                                                            "$ref":  "#/parameters/rowFilter.site_settings.contact_email"
+                                                                        },
+                                                                        {
+                                                                            "$ref":  "#/parameters/rowFilter.site_settings.contact_facebook"
+                                                                        },
+                                                                        {
+                                                                            "$ref":  "#/parameters/rowFilter.site_settings.contact_mobile"
+                                                                        },
+                                                                        {
+                                                                            "$ref":  "#/parameters/rowFilter.site_settings.updated_at"
+                                                                        },
+                                                                        {
+                                                                            "$ref":  "#/parameters/select"
+                                                                        },
+                                                                        {
+                                                                            "$ref":  "#/parameters/order"
+                                                                        },
+                                                                        {
+                                                                            "$ref":  "#/parameters/range"
+                                                                        },
+                                                                        {
+                                                                            "$ref":  "#/parameters/rangeUnit"
+                                                                        },
+                                                                        {
+                                                                            "$ref":  "#/parameters/offset"
+                                                                        },
+                                                                        {
+                                                                            "$ref":  "#/parameters/limit"
+                                                                        },
+                                                                        {
+                                                                            "$ref":  "#/parameters/preferCount"
+                                                                        }
+                                                                    ],
+                                                     "responses":  {
+                                                                       "200":  {
+                                                                                   "description":  "OK",
+                                                                                   "schema":  {
+                                                                                                  "items":  {
+                                                                                                                "$ref":  "#/definitions/site_settings"
+                                                                                                            },
+                                                                                                  "type":  "array"
+                                                                                              }
+                                                                               },
+                                                                       "206":  {
+                                                                                   "description":  "Partial Content"
+                                                                               }
+                                                                   },
+                                                     "tags":  [
+                                                                  "site_settings"
+                                                              ]
+                                                 },
+                                         "post":  {
+                                                      "parameters":  [
+                                                                         {
+                                                                             "$ref":  "#/parameters/body.site_settings"
+                                                                         },
+                                                                         {
+                                                                             "$ref":  "#/parameters/select"
+                                                                         },
+                                                                         {
+                                                                             "$ref":  "#/parameters/preferPost"
+                                                                         }
+                                                                     ],
+                                                      "responses":  {
+                                                                        "201":  {
+                                                                                    "description":  "Created"
+                                                                                }
+                                                                    },
+                                                      "tags":  [
+                                                                   "site_settings"
+                                                               ]
+                                                  },
+                                         "delete":  {
+                                                        "parameters":  [
+                                                                           {
+                                                                               "$ref":  "#/parameters/rowFilter.site_settings.id"
+                                                                           },
+                                                                           {
+                                                                               "$ref":  "#/parameters/rowFilter.site_settings.projects_count"
+                                                                           },
+                                                                           {
+                                                                               "$ref":  "#/parameters/rowFilter.site_settings.chapters_count"
+                                                                           },
+                                                                           {
+                                                                               "$ref":  "#/parameters/rowFilter.site_settings.members_count"
+                                                                           },
+                                                                           {
+                                                                               "$ref":  "#/parameters/rowFilter.site_settings.contact_email"
+                                                                           },
+                                                                           {
+                                                                               "$ref":  "#/parameters/rowFilter.site_settings.contact_facebook"
+                                                                           },
+                                                                           {
+                                                                               "$ref":  "#/parameters/rowFilter.site_settings.contact_mobile"
+                                                                           },
+                                                                           {
+                                                                               "$ref":  "#/parameters/rowFilter.site_settings.updated_at"
+                                                                           },
+                                                                           {
+                                                                               "$ref":  "#/parameters/preferReturn"
+                                                                           }
+                                                                       ],
+                                                        "responses":  {
+                                                                          "204":  {
+                                                                                      "description":  "No Content"
+                                                                                  }
+                                                                      },
+                                                        "tags":  [
+                                                                     "site_settings"
+                                                                 ]
+                                                    },
+                                         "patch":  {
+                                                       "parameters":  [
+                                                                          {
+                                                                              "$ref":  "#/parameters/rowFilter.site_settings.id"
+                                                                          },
+                                                                          {
+                                                                              "$ref":  "#/parameters/rowFilter.site_settings.projects_count"
+                                                                          },
+                                                                          {
+                                                                              "$ref":  "#/parameters/rowFilter.site_settings.chapters_count"
+                                                                          },
+                                                                          {
+                                                                              "$ref":  "#/parameters/rowFilter.site_settings.members_count"
+                                                                          },
+                                                                          {
+                                                                              "$ref":  "#/parameters/rowFilter.site_settings.contact_email"
+                                                                          },
+                                                                          {
+                                                                              "$ref":  "#/parameters/rowFilter.site_settings.contact_facebook"
+                                                                          },
+                                                                          {
+                                                                              "$ref":  "#/parameters/rowFilter.site_settings.contact_mobile"
+                                                                          },
+                                                                          {
+                                                                              "$ref":  "#/parameters/rowFilter.site_settings.updated_at"
+                                                                          },
+                                                                          {
+                                                                              "$ref":  "#/parameters/body.site_settings"
+                                                                          },
+                                                                          {
+                                                                              "$ref":  "#/parameters/preferReturn"
+                                                                          }
+                                                                      ],
+                                                       "responses":  {
+                                                                         "204":  {
+                                                                                     "description":  "No Content"
+                                                                                 }
+                                                                     },
+                                                       "tags":  [
+                                                                    "site_settings"
+                                                                ]
+                                                   }
+                                     },
+                  "/programs":  {
+                                    "get":  {
+                                                "parameters":  [
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.programs.id"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.programs.title"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.programs.description"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.programs.image_url"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.programs.created_at"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/select"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/order"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/range"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rangeUnit"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/offset"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/limit"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/preferCount"
+                                                                   }
+                                                               ],
+                                                "responses":  {
+                                                                  "200":  {
+                                                                              "description":  "OK",
+                                                                              "schema":  {
+                                                                                             "items":  {
+                                                                                                           "$ref":  "#/definitions/programs"
+                                                                                                       },
+                                                                                             "type":  "array"
+                                                                                         }
+                                                                          },
+                                                                  "206":  {
+                                                                              "description":  "Partial Content"
+                                                                          }
+                                                              },
+                                                "tags":  [
+                                                             "programs"
+                                                         ]
+                                            },
+                                    "post":  {
+                                                 "parameters":  [
+                                                                    {
+                                                                        "$ref":  "#/parameters/body.programs"
+                                                                    },
+                                                                    {
+                                                                        "$ref":  "#/parameters/select"
+                                                                    },
+                                                                    {
+                                                                        "$ref":  "#/parameters/preferPost"
+                                                                    }
+                                                                ],
+                                                 "responses":  {
+                                                                   "201":  {
+                                                                               "description":  "Created"
+                                                                           }
+                                                               },
+                                                 "tags":  [
+                                                              "programs"
+                                                          ]
+                                             },
+                                    "delete":  {
+                                                   "parameters":  [
+                                                                      {
+                                                                          "$ref":  "#/parameters/rowFilter.programs.id"
+                                                                      },
+                                                                      {
+                                                                          "$ref":  "#/parameters/rowFilter.programs.title"
+                                                                      },
+                                                                      {
+                                                                          "$ref":  "#/parameters/rowFilter.programs.description"
+                                                                      },
+                                                                      {
+                                                                          "$ref":  "#/parameters/rowFilter.programs.image_url"
+                                                                      },
+                                                                      {
+                                                                          "$ref":  "#/parameters/rowFilter.programs.created_at"
+                                                                      },
+                                                                      {
+                                                                          "$ref":  "#/parameters/preferReturn"
+                                                                      }
+                                                                  ],
+                                                   "responses":  {
+                                                                     "204":  {
+                                                                                 "description":  "No Content"
+                                                                             }
+                                                                 },
+                                                   "tags":  [
+                                                                "programs"
+                                                            ]
+                                               },
+                                    "patch":  {
+                                                  "parameters":  [
+                                                                     {
+                                                                         "$ref":  "#/parameters/rowFilter.programs.id"
+                                                                     },
+                                                                     {
+                                                                         "$ref":  "#/parameters/rowFilter.programs.title"
+                                                                     },
+                                                                     {
+                                                                         "$ref":  "#/parameters/rowFilter.programs.description"
+                                                                     },
+                                                                     {
+                                                                         "$ref":  "#/parameters/rowFilter.programs.image_url"
+                                                                     },
+                                                                     {
+                                                                         "$ref":  "#/parameters/rowFilter.programs.created_at"
+                                                                     },
+                                                                     {
+                                                                         "$ref":  "#/parameters/body.programs"
+                                                                     },
+                                                                     {
+                                                                         "$ref":  "#/parameters/preferReturn"
+                                                                     }
+                                                                 ],
+                                                  "responses":  {
+                                                                    "204":  {
+                                                                                "description":  "No Content"
+                                                                            }
+                                                                },
+                                                  "tags":  [
+                                                               "programs"
+                                                           ]
+                                              }
+                                },
+                  "/users":  {
+                                 "get":  {
+                                             "parameters":  [
+                                                                {
+                                                                    "$ref":  "#/parameters/rowFilter.users.id"
+                                                                },
+                                                                {
+                                                                    "$ref":  "#/parameters/rowFilter.users.full_name"
+                                                                },
+                                                                {
+                                                                    "$ref":  "#/parameters/rowFilter.users.email"
+                                                                },
+                                                                {
+                                                                    "$ref":  "#/parameters/rowFilter.users.phone"
+                                                                },
+                                                                {
+                                                                    "$ref":  "#/parameters/rowFilter.users.created_at"
+                                                                },
+                                                                {
+                                                                    "$ref":  "#/parameters/select"
+                                                                },
+                                                                {
+                                                                    "$ref":  "#/parameters/order"
+                                                                },
+                                                                {
+                                                                    "$ref":  "#/parameters/range"
+                                                                },
+                                                                {
+                                                                    "$ref":  "#/parameters/rangeUnit"
+                                                                },
+                                                                {
+                                                                    "$ref":  "#/parameters/offset"
+                                                                },
+                                                                {
+                                                                    "$ref":  "#/parameters/limit"
+                                                                },
+                                                                {
+                                                                    "$ref":  "#/parameters/preferCount"
+                                                                }
+                                                            ],
+                                             "responses":  {
+                                                               "200":  {
+                                                                           "description":  "OK",
+                                                                           "schema":  {
+                                                                                          "items":  {
+                                                                                                        "$ref":  "#/definitions/users"
+                                                                                                    },
+                                                                                          "type":  "array"
+                                                                                      }
+                                                                       },
+                                                               "206":  {
+                                                                           "description":  "Partial Content"
+                                                                       }
+                                                           },
+                                             "tags":  [
+                                                          "users"
+                                                      ]
+                                         },
+                                 "post":  {
+                                              "parameters":  [
+                                                                 {
+                                                                     "$ref":  "#/parameters/body.users"
+                                                                 },
+                                                                 {
+                                                                     "$ref":  "#/parameters/select"
+                                                                 },
+                                                                 {
+                                                                     "$ref":  "#/parameters/preferPost"
+                                                                 }
+                                                             ],
+                                              "responses":  {
+                                                                "201":  {
+                                                                            "description":  "Created"
+                                                                        }
+                                                            },
+                                              "tags":  [
+                                                           "users"
+                                                       ]
+                                          },
+                                 "delete":  {
+                                                "parameters":  [
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.users.id"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.users.full_name"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.users.email"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.users.phone"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/rowFilter.users.created_at"
+                                                                   },
+                                                                   {
+                                                                       "$ref":  "#/parameters/preferReturn"
+                                                                   }
+                                                               ],
+                                                "responses":  {
+                                                                  "204":  {
+                                                                              "description":  "No Content"
+                                                                          }
+                                                              },
+                                                "tags":  [
+                                                             "users"
+                                                         ]
+                                            },
+                                 "patch":  {
+                                               "parameters":  [
+                                                                  {
+                                                                      "$ref":  "#/parameters/rowFilter.users.id"
+                                                                  },
+                                                                  {
+                                                                      "$ref":  "#/parameters/rowFilter.users.full_name"
+                                                                  },
+                                                                  {
+                                                                      "$ref":  "#/parameters/rowFilter.users.email"
+                                                                  },
+                                                                  {
+                                                                      "$ref":  "#/parameters/rowFilter.users.phone"
+                                                                  },
+                                                                  {
+                                                                      "$ref":  "#/parameters/rowFilter.users.created_at"
+                                                                  },
+                                                                  {
+                                                                      "$ref":  "#/parameters/body.users"
+                                                                  },
+                                                                  {
+                                                                      "$ref":  "#/parameters/preferReturn"
+                                                                  }
+                                                              ],
+                                               "responses":  {
+                                                                 "204":  {
+                                                                             "description":  "No Content"
+                                                                         }
+                                                             },
+                                               "tags":  [
+                                                            "users"
+                                                        ]
+                                           }
+                             },
+                  "/volunteer_opportunities":  {
+                                                   "get":  {
+                                                               "parameters":  [
+                                                                                  {
+                                                                                      "$ref":  "#/parameters/rowFilter.volunteer_opportunities.id"
+                                                                                  },
+                                                                                  {
+                                                                                      "$ref":  "#/parameters/rowFilter.volunteer_opportunities.event_name"
+                                                                                  },
+                                                                                  {
+                                                                                      "$ref":  "#/parameters/rowFilter.volunteer_opportunities.event_date"
+                                                                                  },
+                                                                                  {
+                                                                                      "$ref":  "#/parameters/rowFilter.volunteer_opportunities.chapter_id"
+                                                                                  },
+                                                                                  {
+                                                                                      "$ref":  "#/parameters/rowFilter.volunteer_opportunities.sdgs"
+                                                                                  },
+                                                                                  {
+                                                                                      "$ref":  "#/parameters/rowFilter.volunteer_opportunities.contact_details"
+                                                                                  },
+                                                                                  {
+                                                                                      "$ref":  "#/parameters/rowFilter.volunteer_opportunities.created_at"
+                                                                                  },
+                                                                                  {
+                                                                                      "$ref":  "#/parameters/select"
+                                                                                  },
+                                                                                  {
+                                                                                      "$ref":  "#/parameters/order"
+                                                                                  },
+                                                                                  {
+                                                                                      "$ref":  "#/parameters/range"
+                                                                                  },
+                                                                                  {
+                                                                                      "$ref":  "#/parameters/rangeUnit"
+                                                                                  },
+                                                                                  {
+                                                                                      "$ref":  "#/parameters/offset"
+                                                                                  },
+                                                                                  {
+                                                                                      "$ref":  "#/parameters/limit"
+                                                                                  },
+                                                                                  {
+                                                                                      "$ref":  "#/parameters/preferCount"
+                                                                                  }
+                                                                              ],
+                                                               "responses":  {
+                                                                                 "200":  {
+                                                                                             "description":  "OK",
+                                                                                             "schema":  {
+                                                                                                            "items":  {
+                                                                                                                          "$ref":  "#/definitions/volunteer_opportunities"
+                                                                                                                      },
+                                                                                                            "type":  "array"
+                                                                                                        }
+                                                                                         },
+                                                                                 "206":  {
+                                                                                             "description":  "Partial Content"
+                                                                                         }
+                                                                             },
+                                                               "tags":  [
+                                                                            "volunteer_opportunities"
+                                                                        ]
+                                                           },
+                                                   "post":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "$ref":  "#/parameters/body.volunteer_opportunities"
+                                                                                   },
+                                                                                   {
+                                                                                       "$ref":  "#/parameters/select"
+                                                                                   },
+                                                                                   {
+                                                                                       "$ref":  "#/parameters/preferPost"
+                                                                                   }
+                                                                               ],
+                                                                "responses":  {
+                                                                                  "201":  {
+                                                                                              "description":  "Created"
+                                                                                          }
+                                                                              },
+                                                                "tags":  [
+                                                                             "volunteer_opportunities"
+                                                                         ]
+                                                            },
+                                                   "delete":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "$ref":  "#/parameters/rowFilter.volunteer_opportunities.id"
+                                                                                     },
+                                                                                     {
+                                                                                         "$ref":  "#/parameters/rowFilter.volunteer_opportunities.event_name"
+                                                                                     },
+                                                                                     {
+                                                                                         "$ref":  "#/parameters/rowFilter.volunteer_opportunities.event_date"
+                                                                                     },
+                                                                                     {
+                                                                                         "$ref":  "#/parameters/rowFilter.volunteer_opportunities.chapter_id"
+                                                                                     },
+                                                                                     {
+                                                                                         "$ref":  "#/parameters/rowFilter.volunteer_opportunities.sdgs"
+                                                                                     },
+                                                                                     {
+                                                                                         "$ref":  "#/parameters/rowFilter.volunteer_opportunities.contact_details"
+                                                                                     },
+                                                                                     {
+                                                                                         "$ref":  "#/parameters/rowFilter.volunteer_opportunities.created_at"
+                                                                                     },
+                                                                                     {
+                                                                                         "$ref":  "#/parameters/preferReturn"
+                                                                                     }
+                                                                                 ],
+                                                                  "responses":  {
+                                                                                    "204":  {
+                                                                                                "description":  "No Content"
+                                                                                            }
+                                                                                },
+                                                                  "tags":  [
+                                                                               "volunteer_opportunities"
+                                                                           ]
+                                                              },
+                                                   "patch":  {
+                                                                 "parameters":  [
+                                                                                    {
+                                                                                        "$ref":  "#/parameters/rowFilter.volunteer_opportunities.id"
+                                                                                    },
+                                                                                    {
+                                                                                        "$ref":  "#/parameters/rowFilter.volunteer_opportunities.event_name"
+                                                                                    },
+                                                                                    {
+                                                                                        "$ref":  "#/parameters/rowFilter.volunteer_opportunities.event_date"
+                                                                                    },
+                                                                                    {
+                                                                                        "$ref":  "#/parameters/rowFilter.volunteer_opportunities.chapter_id"
+                                                                                    },
+                                                                                    {
+                                                                                        "$ref":  "#/parameters/rowFilter.volunteer_opportunities.sdgs"
+                                                                                    },
+                                                                                    {
+                                                                                        "$ref":  "#/parameters/rowFilter.volunteer_opportunities.contact_details"
+                                                                                    },
+                                                                                    {
+                                                                                        "$ref":  "#/parameters/rowFilter.volunteer_opportunities.created_at"
+                                                                                    },
+                                                                                    {
+                                                                                        "$ref":  "#/parameters/body.volunteer_opportunities"
+                                                                                    },
+                                                                                    {
+                                                                                        "$ref":  "#/parameters/preferReturn"
+                                                                                    }
+                                                                                ],
+                                                                 "responses":  {
+                                                                                   "204":  {
+                                                                                               "description":  "No Content"
+                                                                                           }
+                                                                               },
+                                                                 "tags":  [
+                                                                              "volunteer_opportunities"
+                                                                          ]
+                                                             }
+                                               },
+                  "/rpc/is_admin":  {
+                                        "get":  {
+                                                    "produces":  [
+                                                                     "application/json",
+                                                                     "application/vnd.pgrst.object+json;nulls=stripped",
+                                                                     "application/vnd.pgrst.object+json"
+                                                                 ],
+                                                    "responses":  {
+                                                                      "200":  {
+                                                                                  "description":  "OK"
+                                                                              }
+                                                                  },
+                                                    "tags":  [
+                                                                 "(rpc) is_admin"
+                                                             ]
+                                                },
+                                        "post":  {
+                                                     "parameters":  [
+                                                                        {
+                                                                            "in":  "body",
+                                                                            "name":  "args",
+                                                                            "required":  true,
+                                                                            "schema":  {
+                                                                                           "type":  "object"
+                                                                                       }
+                                                                        },
+                                                                        {
+                                                                            "$ref":  "#/parameters/preferParams"
+                                                                        }
+                                                                    ],
+                                                     "produces":  [
+                                                                      "application/json",
+                                                                      "application/vnd.pgrst.object+json;nulls=stripped",
+                                                                      "application/vnd.pgrst.object+json"
+                                                                  ],
+                                                     "responses":  {
+                                                                       "200":  {
+                                                                                   "description":  "OK"
+                                                                               }
+                                                                   },
+                                                     "tags":  [
+                                                                  "(rpc) is_admin"
+                                                              ]
+                                                 }
+                                    },
+                  "/rpc/my_chapter_id":  {
+                                             "get":  {
+                                                         "produces":  [
+                                                                          "application/json",
+                                                                          "application/vnd.pgrst.object+json;nulls=stripped",
+                                                                          "application/vnd.pgrst.object+json"
+                                                                      ],
+                                                         "responses":  {
+                                                                           "200":  {
+                                                                                       "description":  "OK"
+                                                                                   }
+                                                                       },
+                                                         "tags":  [
+                                                                      "(rpc) my_chapter_id"
+                                                                  ]
+                                                     },
+                                             "post":  {
+                                                          "parameters":  [
+                                                                             {
+                                                                                 "in":  "body",
+                                                                                 "name":  "args",
+                                                                                 "required":  true,
+                                                                                 "schema":  {
+                                                                                                "type":  "object"
+                                                                                            }
+                                                                             },
+                                                                             {
+                                                                                 "$ref":  "#/parameters/preferParams"
+                                                                             }
+                                                                         ],
+                                                          "produces":  [
+                                                                           "application/json",
+                                                                           "application/vnd.pgrst.object+json;nulls=stripped",
+                                                                           "application/vnd.pgrst.object+json"
+                                                                       ],
+                                                          "responses":  {
+                                                                            "200":  {
+                                                                                        "description":  "OK"
+                                                                                    }
+                                                                        },
+                                                          "tags":  [
+                                                                       "(rpc) my_chapter_id"
+                                                                   ]
+                                                      }
+                                         }
+              },
+    "definitions":  {
+                        "volunteer_signups":  {
+                                                  "required":  [
+                                                                   "id",
+                                                                   "opportunity_id",
+                                                                   "full_name",
+                                                                   "email",
+                                                                   "phone"
+                                                               ],
+                                                  "properties":  {
+                                                                     "id":  {
+                                                                                "default":  "gen_random_uuid()",
+                                                                                "description":  "Note:\nThis is a Primary Key.\u003cpk/\u003e",
+                                                                                "format":  "uuid",
+                                                                                "type":  "string"
+                                                                            },
+                                                                     "opportunity_id":  {
+                                                                                            "description":  "Note:\nThis is a Foreign Key to `volunteer_opportunities.id`.\u003cfk table=\u0027volunteer_opportunities\u0027 column=\u0027id\u0027/\u003e",
+                                                                                            "format":  "uuid",
+                                                                                            "type":  "string"
+                                                                                        },
+                                                                     "full_name":  {
+                                                                                       "format":  "text",
+                                                                                       "type":  "string"
+                                                                                   },
+                                                                     "email":  {
+                                                                                   "format":  "text",
+                                                                                   "type":  "string"
+                                                                               },
+                                                                     "phone":  {
+                                                                                   "format":  "text",
+                                                                                   "type":  "string"
+                                                                               },
+                                                                     "message":  {
+                                                                                     "format":  "text",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                     "created_at":  {
+                                                                                        "default":  "now()",
+                                                                                        "format":  "timestamp with time zone",
+                                                                                        "type":  "string"
+                                                                                    },
+                                                                     "user_id":  {
+                                                                                     "description":  "Note:\nThis is a Foreign Key to `users.id`.\u003cfk table=\u0027users\u0027 column=\u0027id\u0027/\u003e",
+                                                                                     "format":  "uuid",
+                                                                                     "type":  "string"
+                                                                                 }
+                                                                 },
+                                                  "type":  "object"
+                                              },
+                        "profiles":  {
+                                         "required":  [
+                                                          "id",
+                                                          "role",
+                                                          "created_at"
+                                                      ],
+                                         "properties":  {
+                                                            "id":  {
+                                                                       "description":  "Note:\nThis is a Primary Key.\u003cpk/\u003e",
+                                                                       "format":  "uuid",
+                                                                       "type":  "string"
+                                                                   },
+                                                            "role":  {
+                                                                         "format":  "text",
+                                                                         "type":  "string"
+                                                                     },
+                                                            "chapter_id":  {
+                                                                               "description":  "Note:\nThis is a Foreign Key to `chapters.id`.\u003cfk table=\u0027chapters\u0027 column=\u0027id\u0027/\u003e",
+                                                                               "format":  "uuid",
+                                                                               "type":  "string"
+                                                                           },
+                                                            "created_at":  {
+                                                                               "default":  "now()",
+                                                                               "format":  "timestamp with time zone",
+                                                                               "type":  "string"
+                                                                           }
+                                                        },
+                                         "type":  "object"
+                                     },
+                        "chapters":  {
+                                         "required":  [
+                                                          "id",
+                                                          "name",
+                                                          "created_at"
+                                                      ],
+                                         "properties":  {
+                                                            "id":  {
+                                                                       "default":  "gen_random_uuid()",
+                                                                       "description":  "Note:\nThis is a Primary Key.\u003cpk/\u003e",
+                                                                       "format":  "uuid",
+                                                                       "type":  "string"
+                                                                   },
+                                                            "name":  {
+                                                                         "format":  "text",
+                                                                         "type":  "string"
+                                                                     },
+                                                            "description":  {
+                                                                                "format":  "text",
+                                                                                "type":  "string"
+                                                                            },
+                                                            "location":  {
+                                                                             "format":  "text",
+                                                                             "type":  "string"
+                                                                         },
+                                                            "contact_name":  {
+                                                                                 "format":  "text",
+                                                                                 "type":  "string"
+                                                                             },
+                                                            "contact_email":  {
+                                                                                  "format":  "text",
+                                                                                  "type":  "string"
+                                                                              },
+                                                            "contact_phone":  {
+                                                                                  "format":  "text",
+                                                                                  "type":  "string"
+                                                                              },
+                                                            "created_at":  {
+                                                                               "default":  "now()",
+                                                                               "format":  "timestamp with time zone",
+                                                                               "type":  "string"
+                                                                           }
+                                                        },
+                                         "type":  "object"
+                                     },
+                        "site_settings":  {
+                                              "required":  [
+                                                               "id",
+                                                               "projects_count",
+                                                               "chapters_count",
+                                                               "members_count",
+                                                               "contact_email",
+                                                               "contact_facebook",
+                                                               "contact_mobile",
+                                                               "updated_at"
+                                                           ],
+                                              "properties":  {
+                                                                 "id":  {
+                                                                            "default":  true,
+                                                                            "description":  "Note:\nThis is a Primary Key.\u003cpk/\u003e",
+                                                                            "format":  "boolean",
+                                                                            "type":  "boolean"
+                                                                        },
+                                                                 "projects_count":  {
+                                                                                        "default":  0,
+                                                                                        "format":  "integer",
+                                                                                        "type":  "integer"
+                                                                                    },
+                                                                 "chapters_count":  {
+                                                                                        "default":  0,
+                                                                                        "format":  "integer",
+                                                                                        "type":  "integer"
+                                                                                    },
+                                                                 "members_count":  {
+                                                                                       "default":  0,
+                                                                                       "format":  "integer",
+                                                                                       "type":  "integer"
+                                                                                   },
+                                                                 "contact_email":  {
+                                                                                       "default":  "phyouthservice@gmail.com",
+                                                                                       "format":  "text",
+                                                                                       "type":  "string"
+                                                                                   },
+                                                                 "contact_facebook":  {
+                                                                                          "default":  "https://www.facebook.com/YOUTHSERVICEPHILIPPINES",
+                                                                                          "format":  "text",
+                                                                                          "type":  "string"
+                                                                                      },
+                                                                 "contact_mobile":  {
+                                                                                        "default":  "09177798413",
+                                                                                        "format":  "text",
+                                                                                        "type":  "string"
+                                                                                    },
+                                                                 "updated_at":  {
+                                                                                    "default":  "now()",
+                                                                                    "format":  "timestamp with time zone",
+                                                                                    "type":  "string"
+                                                                                }
+                                                             },
+                                              "type":  "object"
+                                          },
+                        "programs":  {
+                                         "required":  [
+                                                          "id",
+                                                          "title",
+                                                          "description",
+                                                          "created_at"
+                                                      ],
+                                         "properties":  {
+                                                            "id":  {
+                                                                       "default":  "gen_random_uuid()",
+                                                                       "description":  "Note:\nThis is a Primary Key.\u003cpk/\u003e",
+                                                                       "format":  "uuid",
+                                                                       "type":  "string"
+                                                                   },
+                                                            "title":  {
+                                                                          "format":  "text",
+                                                                          "type":  "string"
+                                                                      },
+                                                            "description":  {
+                                                                                "format":  "text",
+                                                                                "type":  "string"
+                                                                            },
+                                                            "image_url":  {
+                                                                              "format":  "text",
+                                                                              "type":  "string"
+                                                                          },
+                                                            "created_at":  {
+                                                                               "default":  "now()",
+                                                                               "format":  "timestamp with time zone",
+                                                                               "type":  "string"
+                                                                           }
+                                                        },
+                                         "type":  "object"
+                                     },
+                        "users":  {
+                                      "required":  [
+                                                       "id"
+                                                   ],
+                                      "properties":  {
+                                                         "id":  {
+                                                                    "description":  "Note:\nThis is a Primary Key.\u003cpk/\u003e",
+                                                                    "format":  "uuid",
+                                                                    "type":  "string"
+                                                                },
+                                                         "full_name":  {
+                                                                           "format":  "text",
+                                                                           "type":  "string"
+                                                                       },
+                                                         "email":  {
+                                                                       "format":  "text",
+                                                                       "type":  "string"
+                                                                   },
+                                                         "phone":  {
+                                                                       "format":  "text",
+                                                                       "type":  "string"
+                                                                   },
+                                                         "created_at":  {
+                                                                            "default":  "now()",
+                                                                            "format":  "timestamp with time zone",
+                                                                            "type":  "string"
+                                                                        }
+                                                     },
+                                      "type":  "object"
+                                  },
+                        "volunteer_opportunities":  {
+                                                        "required":  [
+                                                                         "id",
+                                                                         "event_name",
+                                                                         "event_date",
+                                                                         "chapter_id",
+                                                                         "sdgs",
+                                                                         "contact_details",
+                                                                         "created_at"
+                                                                     ],
+                                                        "properties":  {
+                                                                           "id":  {
+                                                                                      "default":  "gen_random_uuid()",
+                                                                                      "description":  "Note:\nThis is a Primary Key.\u003cpk/\u003e",
+                                                                                      "format":  "uuid",
+                                                                                      "type":  "string"
+                                                                                  },
+                                                                           "event_name":  {
+                                                                                              "format":  "text",
+                                                                                              "type":  "string"
+                                                                                          },
+                                                                           "event_date":  {
+                                                                                              "format":  "date",
+                                                                                              "type":  "string"
+                                                                                          },
+                                                                           "chapter_id":  {
+                                                                                              "description":  "Note:\nThis is a Foreign Key to `chapters.id`.\u003cfk table=\u0027chapters\u0027 column=\u0027id\u0027/\u003e",
+                                                                                              "format":  "uuid",
+                                                                                              "type":  "string"
+                                                                                          },
+                                                                           "sdgs":  {
+                                                                                        "format":  "text[]",
+                                                                                        "items":  {
+                                                                                                      "type":  "string"
+                                                                                                  },
+                                                                                        "type":  "array"
+                                                                                    },
+                                                                           "contact_details":  {
+                                                                                                   "format":  "text",
+                                                                                                   "type":  "string"
+                                                                                               },
+                                                                           "created_at":  {
+                                                                                              "default":  "now()",
+                                                                                              "format":  "timestamp with time zone",
+                                                                                              "type":  "string"
+                                                                                          }
+                                                                       },
+                                                        "type":  "object"
+                                                    }
+                    },
+    "parameters":  {
+                       "preferParams":  {
+                                            "name":  "Prefer",
+                                            "description":  "Preference",
+                                            "required":  false,
+                                            "in":  "header",
+                                            "type":  "string"
+                                        },
+                       "preferReturn":  {
+                                            "name":  "Prefer",
+                                            "description":  "Preference",
+                                            "required":  false,
+                                            "enum":  [
+                                                         "return=representation",
+                                                         "return=minimal",
+                                                         "return=none"
+                                                     ],
+                                            "in":  "header",
+                                            "type":  "string"
+                                        },
+                       "preferCount":  {
+                                           "name":  "Prefer",
+                                           "description":  "Preference",
+                                           "required":  false,
+                                           "enum":  [
+                                                        "count=none"
+                                                    ],
+                                           "in":  "header",
+                                           "type":  "string"
+                                       },
+                       "preferPost":  {
+                                          "name":  "Prefer",
+                                          "description":  "Preference",
+                                          "required":  false,
+                                          "enum":  [
+                                                       "return=representation",
+                                                       "return=minimal",
+                                                       "return=none",
+                                                       "resolution=ignore-duplicates",
+                                                       "resolution=merge-duplicates"
+                                                   ],
+                                          "in":  "header",
+                                          "type":  "string"
+                                      },
+                       "select":  {
+                                      "name":  "select",
+                                      "description":  "Filtering Columns",
+                                      "required":  false,
+                                      "in":  "query",
+                                      "type":  "string"
+                                  },
+                       "on_conflict":  {
+                                           "name":  "on_conflict",
+                                           "description":  "On Conflict",
+                                           "required":  false,
+                                           "in":  "query",
+                                           "type":  "string"
+                                       },
+                       "order":  {
+                                     "name":  "order",
+                                     "description":  "Ordering",
+                                     "required":  false,
+                                     "in":  "query",
+                                     "type":  "string"
+                                 },
+                       "range":  {
+                                     "name":  "Range",
+                                     "description":  "Limiting and Pagination",
+                                     "required":  false,
+                                     "in":  "header",
+                                     "type":  "string"
+                                 },
+                       "rangeUnit":  {
+                                         "name":  "Range-Unit",
+                                         "description":  "Limiting and Pagination",
+                                         "required":  false,
+                                         "default":  "items",
+                                         "in":  "header",
+                                         "type":  "string"
+                                     },
+                       "offset":  {
+                                      "name":  "offset",
+                                      "description":  "Limiting and Pagination",
+                                      "required":  false,
+                                      "in":  "query",
+                                      "type":  "string"
+                                  },
+                       "limit":  {
+                                     "name":  "limit",
+                                     "description":  "Limiting and Pagination",
+                                     "required":  false,
+                                     "in":  "query",
+                                     "type":  "string"
+                                 },
+                       "body.volunteer_signups":  {
+                                                      "name":  "volunteer_signups",
+                                                      "description":  "volunteer_signups",
+                                                      "required":  false,
+                                                      "in":  "body",
+                                                      "schema":  {
+                                                                     "$ref":  "#/definitions/volunteer_signups"
+                                                                 }
+                                                  },
+                       "rowFilter.volunteer_signups.id":  {
+                                                              "name":  "id",
+                                                              "required":  false,
+                                                              "in":  "query",
+                                                              "type":  "string"
+                                                          },
+                       "rowFilter.volunteer_signups.opportunity_id":  {
+                                                                          "name":  "opportunity_id",
+                                                                          "required":  false,
+                                                                          "in":  "query",
+                                                                          "type":  "string"
+                                                                      },
+                       "rowFilter.volunteer_signups.full_name":  {
+                                                                     "name":  "full_name",
+                                                                     "required":  false,
+                                                                     "in":  "query",
+                                                                     "type":  "string"
+                                                                 },
+                       "rowFilter.volunteer_signups.email":  {
+                                                                 "name":  "email",
+                                                                 "required":  false,
+                                                                 "in":  "query",
+                                                                 "type":  "string"
+                                                             },
+                       "rowFilter.volunteer_signups.phone":  {
+                                                                 "name":  "phone",
+                                                                 "required":  false,
+                                                                 "in":  "query",
+                                                                 "type":  "string"
+                                                             },
+                       "rowFilter.volunteer_signups.message":  {
+                                                                   "name":  "message",
+                                                                   "required":  false,
+                                                                   "in":  "query",
+                                                                   "type":  "string"
+                                                               },
+                       "rowFilter.volunteer_signups.created_at":  {
+                                                                      "name":  "created_at",
+                                                                      "required":  false,
+                                                                      "in":  "query",
+                                                                      "type":  "string"
+                                                                  },
+                       "rowFilter.volunteer_signups.user_id":  {
+                                                                   "name":  "user_id",
+                                                                   "required":  false,
+                                                                   "in":  "query",
+                                                                   "type":  "string"
+                                                               },
+                       "body.profiles":  {
+                                             "name":  "profiles",
+                                             "description":  "profiles",
+                                             "required":  false,
+                                             "in":  "body",
+                                             "schema":  {
+                                                            "$ref":  "#/definitions/profiles"
+                                                        }
+                                         },
+                       "rowFilter.profiles.id":  {
+                                                     "name":  "id",
+                                                     "required":  false,
+                                                     "in":  "query",
+                                                     "type":  "string"
+                                                 },
+                       "rowFilter.profiles.role":  {
+                                                       "name":  "role",
+                                                       "required":  false,
+                                                       "in":  "query",
+                                                       "type":  "string"
+                                                   },
+                       "rowFilter.profiles.chapter_id":  {
+                                                             "name":  "chapter_id",
+                                                             "required":  false,
+                                                             "in":  "query",
+                                                             "type":  "string"
+                                                         },
+                       "rowFilter.profiles.created_at":  {
+                                                             "name":  "created_at",
+                                                             "required":  false,
+                                                             "in":  "query",
+                                                             "type":  "string"
+                                                         },
+                       "body.chapters":  {
+                                             "name":  "chapters",
+                                             "description":  "chapters",
+                                             "required":  false,
+                                             "in":  "body",
+                                             "schema":  {
+                                                            "$ref":  "#/definitions/chapters"
+                                                        }
+                                         },
+                       "rowFilter.chapters.id":  {
+                                                     "name":  "id",
+                                                     "required":  false,
+                                                     "in":  "query",
+                                                     "type":  "string"
+                                                 },
+                       "rowFilter.chapters.name":  {
+                                                       "name":  "name",
+                                                       "required":  false,
+                                                       "in":  "query",
+                                                       "type":  "string"
+                                                   },
+                       "rowFilter.chapters.description":  {
+                                                              "name":  "description",
+                                                              "required":  false,
+                                                              "in":  "query",
+                                                              "type":  "string"
+                                                          },
+                       "rowFilter.chapters.location":  {
+                                                           "name":  "location",
+                                                           "required":  false,
+                                                           "in":  "query",
+                                                           "type":  "string"
+                                                       },
+                       "rowFilter.chapters.contact_name":  {
+                                                               "name":  "contact_name",
+                                                               "required":  false,
+                                                               "in":  "query",
+                                                               "type":  "string"
+                                                           },
+                       "rowFilter.chapters.contact_email":  {
+                                                                "name":  "contact_email",
+                                                                "required":  false,
+                                                                "in":  "query",
+                                                                "type":  "string"
+                                                            },
+                       "rowFilter.chapters.contact_phone":  {
+                                                                "name":  "contact_phone",
+                                                                "required":  false,
+                                                                "in":  "query",
+                                                                "type":  "string"
+                                                            },
+                       "rowFilter.chapters.created_at":  {
+                                                             "name":  "created_at",
+                                                             "required":  false,
+                                                             "in":  "query",
+                                                             "type":  "string"
+                                                         },
+                       "body.site_settings":  {
+                                                  "name":  "site_settings",
+                                                  "description":  "site_settings",
+                                                  "required":  false,
+                                                  "in":  "body",
+                                                  "schema":  {
+                                                                 "$ref":  "#/definitions/site_settings"
+                                                             }
+                                              },
+                       "rowFilter.site_settings.id":  {
+                                                          "name":  "id",
+                                                          "required":  false,
+                                                          "in":  "query",
+                                                          "type":  "string"
+                                                      },
+                       "rowFilter.site_settings.projects_count":  {
+                                                                      "name":  "projects_count",
+                                                                      "required":  false,
+                                                                      "in":  "query",
+                                                                      "type":  "string"
+                                                                  },
+                       "rowFilter.site_settings.chapters_count":  {
+                                                                      "name":  "chapters_count",
+                                                                      "required":  false,
+                                                                      "in":  "query",
+                                                                      "type":  "string"
+                                                                  },
+                       "rowFilter.site_settings.members_count":  {
+                                                                     "name":  "members_count",
+                                                                     "required":  false,
+                                                                     "in":  "query",
+                                                                     "type":  "string"
+                                                                 },
+                       "rowFilter.site_settings.contact_email":  {
+                                                                     "name":  "contact_email",
+                                                                     "required":  false,
+                                                                     "in":  "query",
+                                                                     "type":  "string"
+                                                                 },
+                       "rowFilter.site_settings.contact_facebook":  {
+                                                                        "name":  "contact_facebook",
+                                                                        "required":  false,
+                                                                        "in":  "query",
+                                                                        "type":  "string"
+                                                                    },
+                       "rowFilter.site_settings.contact_mobile":  {
+                                                                      "name":  "contact_mobile",
+                                                                      "required":  false,
+                                                                      "in":  "query",
+                                                                      "type":  "string"
+                                                                  },
+                       "rowFilter.site_settings.updated_at":  {
+                                                                  "name":  "updated_at",
+                                                                  "required":  false,
+                                                                  "in":  "query",
+                                                                  "type":  "string"
+                                                              },
+                       "body.programs":  {
+                                             "name":  "programs",
+                                             "description":  "programs",
+                                             "required":  false,
+                                             "in":  "body",
+                                             "schema":  {
+                                                            "$ref":  "#/definitions/programs"
+                                                        }
+                                         },
+                       "rowFilter.programs.id":  {
+                                                     "name":  "id",
+                                                     "required":  false,
+                                                     "in":  "query",
+                                                     "type":  "string"
+                                                 },
+                       "rowFilter.programs.title":  {
+                                                        "name":  "title",
+                                                        "required":  false,
+                                                        "in":  "query",
+                                                        "type":  "string"
+                                                    },
+                       "rowFilter.programs.description":  {
+                                                              "name":  "description",
+                                                              "required":  false,
+                                                              "in":  "query",
+                                                              "type":  "string"
+                                                          },
+                       "rowFilter.programs.image_url":  {
+                                                            "name":  "image_url",
+                                                            "required":  false,
+                                                            "in":  "query",
+                                                            "type":  "string"
+                                                        },
+                       "rowFilter.programs.created_at":  {
+                                                             "name":  "created_at",
+                                                             "required":  false,
+                                                             "in":  "query",
+                                                             "type":  "string"
+                                                         },
+                       "body.users":  {
+                                          "name":  "users",
+                                          "description":  "users",
+                                          "required":  false,
+                                          "in":  "body",
+                                          "schema":  {
+                                                         "$ref":  "#/definitions/users"
+                                                     }
+                                      },
+                       "rowFilter.users.id":  {
+                                                  "name":  "id",
+                                                  "required":  false,
+                                                  "in":  "query",
+                                                  "type":  "string"
+                                              },
+                       "rowFilter.users.full_name":  {
+                                                         "name":  "full_name",
+                                                         "required":  false,
+                                                         "in":  "query",
+                                                         "type":  "string"
+                                                     },
+                       "rowFilter.users.email":  {
+                                                     "name":  "email",
+                                                     "required":  false,
+                                                     "in":  "query",
+                                                     "type":  "string"
+                                                 },
+                       "rowFilter.users.phone":  {
+                                                     "name":  "phone",
+                                                     "required":  false,
+                                                     "in":  "query",
+                                                     "type":  "string"
+                                                 },
+                       "rowFilter.users.created_at":  {
+                                                          "name":  "created_at",
+                                                          "required":  false,
+                                                          "in":  "query",
+                                                          "type":  "string"
+                                                      },
+                       "body.volunteer_opportunities":  {
+                                                            "name":  "volunteer_opportunities",
+                                                            "description":  "volunteer_opportunities",
+                                                            "required":  false,
+                                                            "in":  "body",
+                                                            "schema":  {
+                                                                           "$ref":  "#/definitions/volunteer_opportunities"
+                                                                       }
+                                                        },
+                       "rowFilter.volunteer_opportunities.id":  {
+                                                                    "name":  "id",
+                                                                    "required":  false,
+                                                                    "in":  "query",
+                                                                    "type":  "string"
+                                                                },
+                       "rowFilter.volunteer_opportunities.event_name":  {
+                                                                            "name":  "event_name",
+                                                                            "required":  false,
+                                                                            "in":  "query",
+                                                                            "type":  "string"
+                                                                        },
+                       "rowFilter.volunteer_opportunities.event_date":  {
+                                                                            "name":  "event_date",
+                                                                            "required":  false,
+                                                                            "in":  "query",
+                                                                            "type":  "string"
+                                                                        },
+                       "rowFilter.volunteer_opportunities.chapter_id":  {
+                                                                            "name":  "chapter_id",
+                                                                            "required":  false,
+                                                                            "in":  "query",
+                                                                            "type":  "string"
+                                                                        },
+                       "rowFilter.volunteer_opportunities.sdgs":  {
+                                                                      "name":  "sdgs",
+                                                                      "required":  false,
+                                                                      "in":  "query",
+                                                                      "type":  "string"
+                                                                  },
+                       "rowFilter.volunteer_opportunities.contact_details":  {
+                                                                                 "name":  "contact_details",
+                                                                                 "required":  false,
+                                                                                 "in":  "query",
+                                                                                 "type":  "string"
+                                                                             },
+                       "rowFilter.volunteer_opportunities.created_at":  {
+                                                                            "name":  "created_at",
+                                                                            "required":  false,
+                                                                            "in":  "query",
+                                                                            "type":  "string"
+                                                                        }
+                   },
+    "externalDocs":  {
+                         "description":  "PostgREST Documentation",
+                         "url":  "https://postgrest.org/en/v14/references/api.html"
+                     }
+}

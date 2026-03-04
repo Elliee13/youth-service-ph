@@ -173,15 +173,19 @@ export type VolunteerSignup = {
 
 export async function signUpForOpportunity(input: VolunteerSignupInput): Promise<void> {
   const { data: userData } = await supabase.auth.getUser();
-  const userId = userData.user?.id ?? null;
+  const userId = userData.user?.id;
+  const normalizedFullName = input.full_name.trim();
+  const normalizedEmail = input.email.trim().toLowerCase();
+  const normalizedPhone = input.phone.trim();
+  const normalizedMessage = input.message?.trim() || null;
 
   const { error } = await supabase.from("volunteer_signups").insert({
     opportunity_id: input.opportunity_id,
-    full_name: input.full_name,
-    email: input.email,
-    phone: input.phone,
-    message: input.message || null,
-    user_id: userId,
+    full_name: normalizedFullName,
+    email: normalizedEmail,
+    phone: normalizedPhone,
+    message: normalizedMessage,
+    ...(userId ? { user_id: userId } : {}),
   });
 
   if (error) logAndThrow("signUpForOpportunity", error);

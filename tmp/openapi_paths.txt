@@ -1,0 +1,10 @@
+/
+/chapters
+/profiles
+/programs
+/rpc/is_admin
+/rpc/my_chapter_id
+/site_settings
+/users
+/volunteer_opportunities
+/volunteer_signups

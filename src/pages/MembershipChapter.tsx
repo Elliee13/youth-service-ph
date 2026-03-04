@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { Card } from "../components/ui/Card";
 import { Section } from "../components/ui/Section";
 import { Container } from "../components/ui/Container";
@@ -7,6 +7,58 @@ import { Link } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { listChapters, type Chapter } from "../lib/public.api";
 import { useToast } from "../components/ui/ToastProvider";
+
+const MEMBERSHIP_FORM_EMBED_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSdwMKgIjQNrlLH-j-Qdx0MrKxefxaLRC6gMI_oOgMTosDi_sQ/viewform?embedded=true";
+const MEMBERSHIP_FORM_FALLBACK_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSdwMKgIjQNrlLH-j-Qdx0MrKxefxaLRC6gMI_oOgMTosDi_sQ/viewform";
+
+const CHAPTER_FORM_EMBED_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSefJ0IY39AUBd89A9VC0bojAQSPMXIqas9idU2gRxlSdg3Zkw/viewform?embedded=true";
+
+function toFallbackViewUrl(url: string) {
+  return url
+    .replace(/[?&]embedded=true(?=&|$)/, "")
+    .replace(/[?&]$/, "")
+    .replace("?&", "?");
+}
+
+const CHAPTER_FORM_FALLBACK_URL = toFallbackViewUrl(CHAPTER_FORM_EMBED_URL);
+
+type GoogleFormEmbedProps = {
+  title: string;
+  embedUrl: string;
+  fallbackUrl: string;
+};
+
+function GoogleFormEmbed({ title, embedUrl, fallbackUrl }: GoogleFormEmbedProps) {
+  return (
+    <div className="overflow-x-hidden">
+      <div className="text-sm font-semibold">{title}</div>
+      <div className="mt-4 overflow-hidden rounded-2xl">
+        <iframe
+          title={title}
+          src={embedUrl}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          className="h-[720px] w-full rounded-2xl border border-black/10 bg-white sm:h-[900px]"
+        />
+      </div>
+      <p className="mt-3 text-xs text-black/60">
+        If the form doesn&apos;t load,{" "}
+        <a
+          href={fallbackUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="font-semibold text-[rgb(var(--accent))] hover:underline"
+        >
+          open it here
+        </a>
+        .
+      </p>
+    </div>
+  );
+}
 
 export default function MembershipChapter() {
   const scope = useRef<HTMLDivElement | null>(null);
@@ -69,22 +121,11 @@ export default function MembershipChapter() {
         description="Fill out the form below. Our team will review your submission."
       >
         <Card data-reveal className="border-black/10 bg-white/70 p-6 sm:p-8">
-          <div className="text-sm font-semibold">Membership form</div>
-          <p className="mt-2 text-sm text-black/65">
-            Google Forms no longer allows embedding on external sites, so the form opens in a new
-            tab.
-          </p>
-          <div className="mt-5">
-            <a
-              href="https://docs.google.com/forms/d/e/1FAIpQLSdwMKgIjQNrlLH-j-Qdx0MrKxefxaLRC6gMI_oOgMTosDi_sQ/viewform"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <Button size="lg" className="accent-glow">
-                Open Membership Form
-              </Button>
-            </a>
-          </div>
+          <GoogleFormEmbed
+            title="Membership form"
+            embedUrl={MEMBERSHIP_FORM_EMBED_URL}
+            fallbackUrl={MEMBERSHIP_FORM_FALLBACK_URL}
+          />
         </Card>
       </Section>
 
@@ -95,21 +136,11 @@ export default function MembershipChapter() {
       >
         <div className="grid gap-6 lg:grid-cols-2">
           <Card data-reveal className="border-black/10 bg-white/70 p-6 sm:p-8">
-            <div className="text-sm font-semibold">Chapter proposal form</div>
-            <p className="mt-2 text-sm text-black/65">
-              This form opens in a new tab due to Google Forms embed restrictions.
-            </p>
-            <div className="mt-5">
-              <a
-                href="https://forms.gle/cWPsgBJKLaQoLuUr8?fbclid=IwY2xjawOKRLJleHRuA2FlbQIxMABicmlkETFJWDhJY0U1azBWMDFLOXh2c3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHm01_q8ZFNsR30YIkD2ODzju7eleolSNiJgUoZKW11PV7HAc0NeXszwCRjFU_aem_2mVtlAdu6_smAMkowigvAA"
-                target="_blank"
-                rel="noreferrer"
-              >
-                <Button size="lg" className="accent-glow">
-                  Open Chapter Proposal Form
-                </Button>
-              </a>
-            </div>
+            <GoogleFormEmbed
+              title="Chapter proposal form"
+              embedUrl={CHAPTER_FORM_EMBED_URL}
+              fallbackUrl={CHAPTER_FORM_FALLBACK_URL}
+            />
           </Card>
 
           <div className="space-y-4">

@@ -1,0 +1,20 @@
+HTTP/1.1 406 Not Acceptable
+Date: Wed, 04 Mar 2026 15:07:50 GMT
+Content-Type: application/json; charset=utf-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+Server: cloudflare
+CF-Ray: 9d71caf9bf571a5b-HKG
+CF-Cache-Status: DYNAMIC
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+Vary: Accept-Encoding
+X-Content-Type-Options: nosniff
+proxy-status: PostgREST; error=PGRST106
+sb-gateway-version: 1
+sb-project-ref: nhidzojakurcceaqhnqm
+sb-request-id: 019cb964-181c-7042-a8bd-25771ab21dcd
+x-envoy-attempt-count: 1
+x-envoy-upstream-service-time: 0
+Set-Cookie: __cf_bm=C7v4OZrhCbJ0pb4Q90SGBEIn1m1rlP22p8y1P95nxk8-1772636870-1.0.1.1-9HfaHJLrsysjgeIELGIIfc8Ob_EP4mnqidA4KnkFDf2Y9iwuRjw1kwtfa9WQxY3S0BKn91IJBnjlB5Y0460OZ9nm8RFDHNzYA2YIJyDK2kI; path=/; expires=Wed, 04-Mar-26 15:37:50 GMT; domain=.supabase.co; HttpOnly; Secure; SameSite=None
+alt-svc: h3=":443"; ma=86400
+
