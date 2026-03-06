@@ -1,6 +1,8 @@
 import React, { Suspense, lazy } from "react";
-import { createBrowserRouter } from "react-router-dom";
-import { SiteLayout } from "../components/layout/SiteLayout";
+import { Navigate, createBrowserRouter } from "react-router-dom";
+import { PublicLayout } from "../components/layout/PublicLayout";
+import { AdminLayout } from "../components/layout/AdminLayout";
+import { ChapterHeadLayout } from "../components/layout/ChapterHeadLayout";
 import RouteError from "./RouteError";
 import { RequireRole } from "../auth/RequireRole";
 
@@ -30,11 +32,14 @@ const SignIn = lazy(() => import("../pages/SignIn"));
 const Register = lazy(() => import("../pages/Register"));
 const MyAccount = lazy(() => import("../pages/MyAccount"));
 const AdminDashboard = lazy(() => import("../pages/AdminDashboard"));
+const AdminVolunteers = lazy(() => import("../pages/AdminVolunteers"));
 const ChapterHeadDashboard = lazy(() => import("../pages/ChapterHeadDashboard"));
+const ChapterHeadVolunteers = lazy(() => import("../pages/ChapterHeadVolunteers"));
+const ChapterHeadReports = lazy(() => import("../pages/ChapterHeadReports"));
 
 export const router = createBrowserRouter([
   {
-    element: <SiteLayout />,
+    element: <PublicLayout />,
     errorElement: <RouteError />,
     children: [
       { path: "/", element: withSuspense(<Home />) },
@@ -44,26 +49,96 @@ export const router = createBrowserRouter([
       { path: "/volunteer-opportunities", element: withSuspense(<VolunteerOpportunities />) },
       { path: "/contact", element: withSuspense(<Contact />) },
 
-      { path: "/sign-in", element: withSuspense(<SignIn />) },
+      { path: "/staff", element: withSuspense(<SignIn />) },
+      { path: "/staff/signin", element: <Navigate to="/staff" replace /> },
+      { path: "/sign-in", element: <Navigate to="/staff" replace /> },
       { path: "/register", element: withSuspense(<Register />) },
       { path: "/my-account", element: withSuspense(<MyAccount />) },
-
+    ],
+  },
+  {
+    path: "/admin",
+    element: withSuspense(
+      <RequireRole role="admin">
+        <AdminLayout />
+      </RequireRole>
+    ),
+    errorElement: <RouteError />,
+    children: [
+      { index: true, element: withSuspense(<AdminDashboard />) },
       {
-        path: "/admin",
+        path: "programs",
         element: withSuspense(
-          <RequireRole role="admin">
-            <AdminDashboard />
-          </RequireRole>
+          <AdminDashboard
+            forcedTab="programs"
+            showOverview={false}
+            showTabs={false}
+            title="Programs"
+            subtitle="Manage published program content and media."
+          />
         ),
       },
       {
-        path: "/chapter-head",
+        path: "chapters",
         element: withSuspense(
-          <RequireRole role="chapter_head">
-            <ChapterHeadDashboard />
-          </RequireRole>
+          <AdminDashboard
+            forcedTab="chapters"
+            showOverview={false}
+            showTabs={false}
+            title="Chapters"
+            subtitle="Manage chapter profiles, locations, and contact details."
+          />
         ),
       },
+      {
+        path: "opportunities",
+        element: withSuspense(
+          <AdminDashboard
+            forcedTab="opportunities"
+            showOverview={false}
+            showTabs={false}
+            title="Volunteer Opportunities"
+            subtitle="Create and manage volunteer opportunities across all chapters."
+          />
+        ),
+      },
+      { path: "volunteers", element: withSuspense(<AdminVolunteers />) },
+      {
+        path: "settings",
+        element: withSuspense(
+          <AdminDashboard
+            forcedTab="settings"
+            showOverview={false}
+            showTabs={false}
+            title="Settings"
+            subtitle="Update core site stats and public contact details."
+          />
+        ),
+      },
+    ],
+  },
+  {
+    path: "/chapter-head",
+    element: withSuspense(
+      <RequireRole role="chapter_head">
+        <ChapterHeadLayout />
+      </RequireRole>
+    ),
+    errorElement: <RouteError />,
+    children: [
+      { index: true, element: withSuspense(<ChapterHeadDashboard />) },
+      {
+        path: "opportunities",
+        element: withSuspense(
+          <ChapterHeadDashboard
+            showOverview={false}
+            title="My Opportunities"
+            subtitle="Create and manage volunteer opportunities for your assigned chapter."
+          />
+        ),
+      },
+      { path: "volunteers", element: withSuspense(<ChapterHeadVolunteers />) },
+      { path: "reports", element: withSuspense(<ChapterHeadReports />) },
     ],
   },
 ]);

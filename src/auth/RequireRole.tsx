@@ -25,7 +25,7 @@ export function RequireRole({
   }
 
   if (!user) {
-    return <Navigate to={`/sign-in?role=${role}`} replace state={{ from: location.pathname }} />;
+    return <Navigate to="/staff" replace state={{ from: location.pathname }} />;
   }
 
   if (!profile) {

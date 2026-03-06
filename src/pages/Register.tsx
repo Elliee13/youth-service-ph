@@ -237,10 +237,10 @@ export default function Register() {
               <div className="mt-6 text-xs text-black/55">
                 Admin or chapter head?{" "}
                 <Link
-                  to="/sign-in?role=admin"
+                  to="/staff"
                   className="font-semibold text-[rgb(var(--accent))] hover:underline"
                 >
-                  Use the admin sign-in
+                  Use the staff sign-in
                 </Link>
                 .
               </div>
