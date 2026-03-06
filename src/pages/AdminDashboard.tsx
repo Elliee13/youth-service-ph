@@ -1,10 +1,27 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Building2, CalendarClock, FolderKanban, MoreHorizontal, Plus, RefreshCw, Users } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { Card } from "../components/ui/Card";
 import { CmsShell } from "../components/cms/CmsShell";
 import { DataTable } from "../components/cms/DataTable";
 import { Field, Input, Textarea } from "../components/cms/Field";
 import { FormActions } from "../components/cms/FormActions";
+import { Button } from "../components/ui/shadcn/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../components/ui/shadcn/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/shadcn/table";
 import { useGsapReveal } from "../hooks/useGsapReveal";
 import {
   adminCreateChapter,
@@ -31,6 +48,13 @@ import { useToast } from "../components/ui/useToast";
 
 type Tab = "programs" | "chapters" | "opportunities" | "settings";
 type PostgrestLikeError = { code?: string; message?: string };
+type AdminDashboardProps = {
+  forcedTab?: Tab;
+  showOverview?: boolean;
+  showTabs?: boolean;
+  title?: string;
+  subtitle?: string;
+};
 
 function isPostgrestLikeError(error: unknown): error is PostgrestLikeError {
   if (!error || typeof error !== "object") return false;
@@ -47,11 +71,17 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
-export default function AdminDashboard() {
+export default function AdminDashboard({
+  forcedTab,
+  showOverview = true,
+  showTabs = true,
+  title = "Admin CMS",
+  subtitle = "Manage public content: programs, chapters, opportunities, and global site settings.",
+}: AdminDashboardProps) {
   const scope = useRef<HTMLDivElement | null>(null);
   useGsapReveal(scope);
 
-  const [tab, setTab] = useState<Tab>("programs");
+  const [tab, setTab] = useState<Tab>(forcedTab ?? "programs");
 
   // Data
   const [programs, setPrograms] = useState<ProgramRow[]>([]);
@@ -104,6 +134,11 @@ export default function AdminDashboard() {
     []
   );
 
+  const upcomingCount = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return opps.filter((o) => o.event_date >= today).length;
+  }, [opps]);
+
   async function refreshAll() {
     const [p, c, o, s] = await Promise.all([
       adminListPrograms(),
@@ -139,6 +174,33 @@ export default function AdminDashboard() {
       setParams(params, { replace: true });
     }
   }, [params, setParams, addToast]);
+
+  useEffect(() => {
+    if (forcedTab) {
+      setTab(forcedTab);
+      return;
+    }
+
+    const nextTab = params.get("tab");
+    if (
+      nextTab === "programs" ||
+      nextTab === "chapters" ||
+      nextTab === "opportunities" ||
+      nextTab === "settings"
+    ) {
+      setTab(nextTab);
+    }
+  }, [forcedTab, params]);
+
+  function setActiveTab(nextTab: Tab) {
+    setTab(nextTab);
+
+    if (forcedTab) return;
+
+    const nextParams = new URLSearchParams(params);
+    nextParams.set("tab", nextTab);
+    setParams(nextParams, { replace: true });
+  }
 
   function clearProgramForm() {
     setPEditId(null);
@@ -318,23 +380,79 @@ export default function AdminDashboard() {
   return (
     <div ref={scope}>
       <CmsShell
-        title="Admin CMS"
-        subtitle="Manage public content: programs, chapters, opportunities, and global site settings."
-        right={
-          <div className="flex items-center gap-2 rounded-2xl border border-black/10 bg-white/70 px-4 py-2 text-xs text-black/60 backdrop-blur">
-            <span className="size-1.5 rounded-full bg-[rgb(var(--accent))]" />
-            RLS enforced
-          </div>
-        }
+        title={title}
+        subtitle={subtitle}
+
       >
+        {showOverview ? (
+        <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm mb-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div className="mt-1 text-2xl font-semibold tracking-tight">Workspace Overview</div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="secondary" onClick={() => setActiveTab("opportunities")}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Opportunity
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  refreshAll().catch((e: unknown) => {
+                    const msg = getErrorMessage(e, "Failed to load dashboard.");
+                    addToast({ type: "error", message: msg });
+                  });
+                }}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh
+              </Button>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <Card className="rounded-xl border border-black/10 p-4 shadow-sm">
+              <div className="flex items-center justify-between text-sm text-black/65">
+                <span>Total Programs</span>
+                <FolderKanban className="h-4 w-4" />
+              </div>
+              <div className="mt-2 text-3xl font-semibold tabular-nums">{programs.length}</div>
+            </Card>
+            <Card className="rounded-xl border border-black/10 p-4 shadow-sm">
+              <div className="flex items-center justify-between text-sm text-black/65">
+                <span>Total Chapters</span>
+                <Building2 className="h-4 w-4" />
+              </div>
+              <div className="mt-2 text-3xl font-semibold tabular-nums">{chapters.length}</div>
+            </Card>
+            <Card className="rounded-xl border border-black/10 p-4 shadow-sm">
+              <div className="flex items-center justify-between text-sm text-black/65">
+                <span>Total Volunteers</span>
+                <Users className="h-4 w-4" />
+              </div>
+              <div className="mt-2 text-3xl font-semibold tabular-nums">{settings?.members_count ?? 0}</div>
+            </Card>
+            <Card className="rounded-xl border border-black/10 p-4 shadow-sm">
+              <div className="flex items-center justify-between text-sm text-black/65">
+                <span>Upcoming Opportunities</span>
+                <CalendarClock className="h-4 w-4" />
+              </div>
+              <div className="mt-2 text-3xl font-semibold tabular-nums">{upcomingCount}</div>
+            </Card>
+          </div>
+        </div>
+        ) : null}
+
         {/* Tabs */}
+        {showTabs ? (
         <Card className="border-black/10 bg-white/70 p-3 backdrop-blur">
           <div className="grid gap-2 sm:grid-cols-4">
             {tabs.map((t) => (
               <button
                 key={t.key}
                 type="button"
-                onClick={() => setTab(t.key)}
+                onClick={() => setActiveTab(t.key)}
                 className={[
                   "rounded-2xl border px-4 py-3 text-left transition",
                   tab === t.key
@@ -348,6 +466,7 @@ export default function AdminDashboard() {
             ))}
           </div>
         </Card>
+        ) : null}
 
 
         {/* Programs */}
@@ -433,51 +552,80 @@ export default function AdminDashboard() {
 
             <div className="lg:col-span-7">
               <DataTable title="Programs" description="Click a row to edit.">
-                <div className="grid grid-cols-12 gap-3 border-b border-black/10 pb-3 text-xs font-semibold text-black/60">
-                  <div className="col-span-5">Title</div>
-                  <div className="col-span-5">Description</div>
-                  <div className="col-span-2 text-right">Actions</div>
-                </div>
-
-                <div className="divide-y divide-black/10">
-                  {programs.map((p) => (
-                    <div
-                      key={p.id}
-                      className="grid cursor-pointer grid-cols-12 gap-3 py-4 text-sm hover:bg-black/[0.02]"
-                      onClick={() => {
-                        setPEditId(p.id);
-                        setPTitle(p.title);
-                        setPDesc(p.description);
-                        setPImageUrl(p.image_url);
-                      }}
-                    >
-                      <div className="col-span-5 font-semibold">{p.title}</div>
-                      <div className="col-span-5 text-black/65 line-clamp-2">{p.description}</div>
-                      <div className="col-span-2 flex justify-end">
-                        <button
-                          className="rounded-full border border-black/10 px-3 py-1 text-xs text-black/65 hover:bg-red/5"
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            setBusy(true);
-                            try {
-                              await adminDeleteProgram(p.id);
-                              await refreshAll();
-                              if (pEditId === p.id) clearProgramForm();
-                              addToast({ type: "success", message: "Program deleted." });
-                            } catch (err: unknown) {
-                              const msg = getErrorMessage(err, "Delete failed.");
-                              addToast({ type: "error", message: msg });
-                            } finally {
-                              setBusy(false);
-                            }
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[40%]">Title</TableHead>
+                      <TableHead className="w-[45%]">Description</TableHead>
+                      <TableHead className="w-[15%] text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {programs.map((p) => (
+                      <TableRow
+                        key={p.id}
+                        className="cursor-pointer"
+                        onClick={() => {
+                          setPEditId(p.id);
+                          setPTitle(p.title);
+                          setPDesc(p.description);
+                          setPImageUrl(p.image_url);
+                        }}
+                      >
+                        <TableCell className="font-semibold">{p.title}</TableCell>
+                        <TableCell className="text-black/65 line-clamp-2">{p.description}</TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onSelect={(e) => {
+                                  e.preventDefault();
+                                  setPEditId(p.id);
+                                  setPTitle(p.title);
+                                  setPDesc(p.description);
+                                  setPImageUrl(p.image_url);
+                                }}
+                              >
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-red-600"
+                                onSelect={async (e) => {
+                                  e.preventDefault();
+                                  setBusy(true);
+                                  try {
+                                    await adminDeleteProgram(p.id);
+                                    await refreshAll();
+                                    if (pEditId === p.id) clearProgramForm();
+                                    addToast({ type: "success", message: "Program deleted." });
+                                  } catch (err: unknown) {
+                                    const msg = getErrorMessage(err, "Delete failed.");
+                                    addToast({ type: "error", message: msg });
+                                  } finally {
+                                    setBusy(false);
+                                  }
+                                }}
+                              >
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </DataTable>
             </div>
           </div>
@@ -533,56 +681,88 @@ export default function AdminDashboard() {
 
             <div className="lg:col-span-7">
               <DataTable title="Chapters" description="Click a row to edit.">
-                <div className="grid grid-cols-12 gap-3 border-b border-black/10 pb-3 text-xs font-semibold text-black/60">
-                  <div className="col-span-4">Name</div>
-                  <div className="col-span-4">Location</div>
-                  <div className="col-span-2">Contact</div>
-                  <div className="col-span-2 text-right">Actions</div>
-                </div>
-
-                <div className="divide-y divide-black/10">
-                  {chapters.map((c) => (
-                    <div
-                      key={c.id}
-                      className="grid cursor-pointer grid-cols-12 gap-3 py-4 text-sm hover:bg-black/[0.02]"
-                      onClick={() => {
-                        setCEditId(c.id);
-                        setCName(c.name);
-                        setCDesc(c.description ?? "");
-                        setCLocation(c.location ?? "");
-                        setCContactName(c.contact_name ?? "");
-                        setCContactEmail(c.contact_email ?? "");
-                        setCContactPhone(c.contact_phone ?? "");
-                      }}
-                    >
-                      <div className="col-span-4 font-semibold">{c.name}</div>
-                      <div className="col-span-4 text-black/65">{c.location ?? "—"}</div>
-                      <div className="col-span-2 text-black/65">{c.contact_name ?? "—"}</div>
-                      <div className="col-span-2 flex justify-end">
-                        <button
-                          className="rounded-full border border-black/10 px-3 py-1 text-xs text-black/65 hover:bg-black/5"
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            setBusy(true);
-                            try {
-                              await adminDeleteChapter(c.id);
-                              await refreshAll();
-                              if (cEditId === c.id) clearChapterForm();
-                              addToast({ type: "success", message: "Chapter deleted." });
-                            } catch (err: unknown) {
-                              const msg = getErrorMessage(err, "Delete failed.");
-                              addToast({ type: "error", message: msg });
-                            } finally {
-                              setBusy(false);
-                            }
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[32%]">Name</TableHead>
+                      <TableHead className="w-[32%]">Location</TableHead>
+                      <TableHead className="w-[20%]">Contact</TableHead>
+                      <TableHead className="w-[16%] text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {chapters.map((c) => (
+                      <TableRow
+                        key={c.id}
+                        className="cursor-pointer"
+                        onClick={() => {
+                          setCEditId(c.id);
+                          setCName(c.name);
+                          setCDesc(c.description ?? "");
+                          setCLocation(c.location ?? "");
+                          setCContactName(c.contact_name ?? "");
+                          setCContactEmail(c.contact_email ?? "");
+                          setCContactPhone(c.contact_phone ?? "");
+                        }}
+                      >
+                        <TableCell className="font-semibold">{c.name}</TableCell>
+                        <TableCell className="text-black/65">{c.location ?? "-"}</TableCell>
+                        <TableCell className="text-black/65">{c.contact_name ?? "-"}</TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onSelect={(e) => {
+                                  e.preventDefault();
+                                  setCEditId(c.id);
+                                  setCName(c.name);
+                                  setCDesc(c.description ?? "");
+                                  setCLocation(c.location ?? "");
+                                  setCContactName(c.contact_name ?? "");
+                                  setCContactEmail(c.contact_email ?? "");
+                                  setCContactPhone(c.contact_phone ?? "");
+                                }}
+                              >
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-red-600"
+                                onSelect={async (e) => {
+                                  e.preventDefault();
+                                  setBusy(true);
+                                  try {
+                                    await adminDeleteChapter(c.id);
+                                    await refreshAll();
+                                    if (cEditId === c.id) clearChapterForm();
+                                    addToast({ type: "success", message: "Chapter deleted." });
+                                  } catch (err: unknown) {
+                                    const msg = getErrorMessage(err, "Delete failed.");
+                                    addToast({ type: "error", message: msg });
+                                  } finally {
+                                    setBusy(false);
+                                  }
+                                }}
+                              >
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </DataTable>
             </div>
           </div>
@@ -640,57 +820,88 @@ export default function AdminDashboard() {
 
             <div className="lg:col-span-7">
               <DataTable title="Opportunities" description="Click a row to edit.">
-                <div className="grid grid-cols-12 gap-3 border-b border-black/10 pb-3 text-xs font-semibold text-black/60">
-                  <div className="col-span-4">Event</div>
-                  <div className="col-span-3">Date</div>
-                  <div className="col-span-3">Chapter</div>
-                  <div className="col-span-2 text-right">Actions</div>
-                </div>
-
-                <div className="divide-y divide-black/10">
-                  {opps.map((o) => (
-                    <div
-                      key={o.id}
-                      className="grid cursor-pointer grid-cols-12 gap-3 py-4 text-sm hover:bg-black/[0.02]"
-                      onClick={() => {
-                        setOEditId(o.id);
-                        setOName(o.event_name);
-                        setODate(o.event_date);
-                        setOChapterId(o.chapter_id);
-                        setOSdgs((o.sdgs ?? []).join(", "));
-                        setOContact(o.contact_details);
-                      }}
-                    >
-                      <div className="col-span-4 font-semibold">{o.event_name}</div>
-                      <div className="col-span-3 text-black/65 tabular-nums">{o.event_date}</div>
-                      <div className="col-span-3 text-black/65">
-                        {chapters.find((c) => c.id === o.chapter_id)?.name ?? "—"}
-                      </div>
-                      <div className="col-span-2 flex justify-end">
-                        <button
-                          className="rounded-full border border-black/10 px-3 py-1 text-xs text-black/65 hover:bg-black/5"
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            setBusy(true);
-                            try {
-                              await deleteOpportunity(o.id);
-                              await refreshAll();
-                              if (oEditId === o.id) clearOppForm();
-                              addToast({ type: "success", message: "Opportunity deleted." });
-                            } catch (err: unknown) {
-                              const msg = getErrorMessage(err, "Delete failed.");
-                              addToast({ type: "error", message: msg });
-                            } finally {
-                              setBusy(false);
-                            }
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[34%]">Event</TableHead>
+                      <TableHead className="w-[24%]">Date</TableHead>
+                      <TableHead className="w-[26%]">Chapter</TableHead>
+                      <TableHead className="w-[16%] text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {opps.map((o) => (
+                      <TableRow
+                        key={o.id}
+                        className="cursor-pointer"
+                        onClick={() => {
+                          setOEditId(o.id);
+                          setOName(o.event_name);
+                          setODate(o.event_date);
+                          setOChapterId(o.chapter_id);
+                          setOSdgs((o.sdgs ?? []).join(", "));
+                          setOContact(o.contact_details);
+                        }}
+                      >
+                        <TableCell className="font-semibold">{o.event_name}</TableCell>
+                        <TableCell className="text-black/65 tabular-nums">{o.event_date}</TableCell>
+                        <TableCell className="text-black/65">
+                          {chapters.find((c) => c.id === o.chapter_id)?.name ?? "-"}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onSelect={(e) => {
+                                  e.preventDefault();
+                                  setOEditId(o.id);
+                                  setOName(o.event_name);
+                                  setODate(o.event_date);
+                                  setOChapterId(o.chapter_id);
+                                  setOSdgs((o.sdgs ?? []).join(", "));
+                                  setOContact(o.contact_details);
+                                }}
+                              >
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-red-600"
+                                onSelect={async (e) => {
+                                  e.preventDefault();
+                                  setBusy(true);
+                                  try {
+                                    await deleteOpportunity(o.id);
+                                    await refreshAll();
+                                    if (oEditId === o.id) clearOppForm();
+                                    addToast({ type: "success", message: "Opportunity deleted." });
+                                  } catch (err: unknown) {
+                                    const msg = getErrorMessage(err, "Delete failed.");
+                                    addToast({ type: "error", message: msg });
+                                  } finally {
+                                    setBusy(false);
+                                  }
+                                }}
+                              >
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </DataTable>
             </div>
           </div>

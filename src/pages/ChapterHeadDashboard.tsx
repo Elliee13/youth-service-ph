@@ -1,16 +1,45 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { CalendarClock, ListChecks, MoreHorizontal, Plus, RefreshCw, Users } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { CmsShell } from "../components/cms/CmsShell";
-import { Card } from "../components/ui/Card";
-import { DataTable } from "../components/cms/DataTable";
-import { Field, Input, Textarea } from "../components/cms/Field";
-import { FormActions } from "../components/cms/FormActions";
+import { Button } from "../components/ui/shadcn/button";
+import { Badge } from "../components/ui/shadcn/badge";
+import { Card, CardContent, CardHeader } from "../components/ui/shadcn/card";
+import { Input } from "../components/ui/shadcn/input";
+import { Label } from "../components/ui/shadcn/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../components/ui/shadcn/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../components/ui/shadcn/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/shadcn/table";
+import { Textarea } from "../components/ui/shadcn/textarea";
 import { useAuth } from "../auth/useAuth";
 import { useGsapReveal } from "../hooks/useGsapReveal";
 import {
   createOpportunity,
   deleteOpportunity,
   listOpportunities,
+  listVolunteerSignupsByOpportunityIds,
   updateOpportunity,
   type OpportunityRow,
 } from "../lib/admin.api";
@@ -33,7 +62,60 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
-export default function ChapterHeadDashboard() {
+function FormField({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <div className="flex items-end justify-between gap-4">
+        <Label className="text-xs font-semibold text-black/70">{label}</Label>
+        {hint ? <div className="text-xs text-black/45">{hint}</div> : null}
+      </div>
+      <div className="mt-2">{children}</div>
+    </div>
+  );
+}
+
+function FormActionsBar({
+  busy,
+  primaryLabel,
+  onCancel,
+}: {
+  busy: boolean;
+  primaryLabel: string;
+  onCancel?: () => void;
+}) {
+  return (
+    <div className="mt-4 flex flex-wrap gap-3">
+      <Button type="submit" className="accent-glow" disabled={busy}>
+        {busy ? "Saving..." : primaryLabel}
+      </Button>
+      {onCancel ? (
+        <Button type="button" variant="secondary" onClick={onCancel} disabled={busy}>
+          Cancel
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
+type ChapterHeadDashboardProps = {
+  showOverview?: boolean;
+  title?: string;
+  subtitle?: string;
+};
+
+export default function ChapterHeadDashboard({
+  showOverview = true,
+  title = "Chapter Head Dashboard",
+  subtitle = "Create and manage volunteer opportunities for your chapter only.",
+}: ChapterHeadDashboardProps) {
   const scope = useRef<HTMLDivElement | null>(null);
   useGsapReveal(scope);
 
@@ -41,6 +123,7 @@ export default function ChapterHeadDashboard() {
   const chapterId = profile?.chapter_id ?? null;
 
   const [opps, setOpps] = useState<OpportunityRow[]>([]);
+  const [volunteerCount, setVolunteerCount] = useState(0);
   const [busy, setBusy] = useState(false);
   const [params, setParams] = useSearchParams();
   const { addToast } = useToast();
@@ -50,14 +133,18 @@ export default function ChapterHeadDashboard() {
   const [date, setDate] = useState("");
   const [sdgs, setSdgs] = useState("SDG 4, SDG 10");
   const [contact, setContact] = useState("");
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!chapterId) {
       setOpps([]);
+      setVolunteerCount(0);
       return;
     }
     const scoped = await listOpportunities(chapterId);
     setOpps(scoped);
+    const signups = await listVolunteerSignupsByOpportunityIds(scoped.map((opportunity) => opportunity.id));
+    setVolunteerCount(signups.length);
   }, [chapterId]);
 
   useEffect(() => {
@@ -121,7 +208,7 @@ export default function ChapterHeadDashboard() {
       await refresh();
       clearForm();
     } catch (e: unknown) {
-      // If RLS blocks, you’ll see it here (correct behavior)
+      // If RLS blocks, you'll see it here (correct behavior)
       const msg = getErrorMessage(e, "Save failed.");
       addToast({ type: "error", message: msg });
     } finally {
@@ -129,12 +216,89 @@ export default function ChapterHeadDashboard() {
     }
   }
 
+  async function runDelete(id: string) {
+    setBusy(true);
+    try {
+      await deleteOpportunity(id);
+      await refresh();
+      if (editId === id) clearForm();
+      addToast({ type: "success", message: "Opportunity deleted." });
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, "Delete failed.");
+      addToast({ type: "error", message: msg });
+    } finally {
+      setBusy(false);
+      setPendingDeleteId(null);
+    }
+  }
+
+  const upcomingEvents = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return opps.filter((o) => o.event_date >= today).length;
+  }, [opps]);
+
   return (
     <div ref={scope}>
       <CmsShell
-        title="Chapter Head Dashboard"
-        subtitle="Create and manage volunteer opportunities for your chapter only."
+        title={title}
+        subtitle={subtitle}
       >
+        {showOverview ? (
+        <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div className="mt-1 text-2xl font-semibold tracking-tight">Operations Overview</div>
+              <div className="mt-2 flex items-center gap-2 text-xs text-black/60">
+                <Badge variant="outline">Scoped</Badge>
+                <span>Only your chapter opportunities are editable.</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="secondary" onClick={clearForm}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Opportunity
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  refresh().catch((e: unknown) => {
+                    const msg = getErrorMessage(e, "Failed to load opportunities.");
+                    addToast({ type: "error", message: msg });
+                  });
+                }}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh
+              </Button>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+            <Card className="rounded-xl border border-black/10 p-4 shadow-sm">
+              <div className="flex items-center justify-between text-sm text-black/65">
+                <span>My Opportunities</span>
+                <ListChecks className="h-4 w-4" />
+              </div>
+              <div className="mt-2 text-3xl font-semibold tabular-nums">{opps.length}</div>
+            </Card>
+            <Card className="rounded-xl border border-black/10 p-4 shadow-sm">
+              <div className="flex items-center justify-between text-sm text-black/65">
+                <span>Total Volunteers</span>
+                <Users className="h-4 w-4" />
+              </div>
+              <div className="mt-2 text-3xl font-semibold tabular-nums">{volunteerCount}</div>
+            </Card>
+            <Card className="rounded-xl border border-black/10 p-4 shadow-sm">
+              <div className="flex items-center justify-between text-sm text-black/65">
+                <span>Upcoming Events</span>
+                <CalendarClock className="h-4 w-4" />
+              </div>
+              <div className="mt-2 text-3xl font-semibold tabular-nums">{upcomingEvents}</div>
+            </Card>
+          </div>
+        </div>
+        ) : null}
 
         <div className="mt-8 grid gap-6 lg:grid-cols-12">
           <div className="lg:col-span-5">
@@ -144,23 +308,23 @@ export default function ChapterHeadDashboard() {
               </div>
 
               <form onSubmit={submit} className="mt-6 grid gap-4">
-                <Field label="Event name">
+                <FormField label="Event name">
                   <Input value={name} onChange={(e) => setName(e.target.value)} />
-                </Field>
+                </FormField>
 
-                <Field label="Date">
+                <FormField label="Date">
                   <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-                </Field>
+                </FormField>
 
-                <Field label="SDGs impacted" hint="Comma-separated">
+                <FormField label="SDGs impacted" hint="Comma-separated">
                   <Input value={sdgs} onChange={(e) => setSdgs(e.target.value)} />
-                </Field>
+                </FormField>
 
-                <Field label="Contact details for sign up">
+                <FormField label="Contact details for sign up">
                   <Textarea value={contact} onChange={(e) => setContact(e.target.value)} />
-                </Field>
+                </FormField>
 
-                <FormActions
+                <FormActionsBar
                   busy={busy}
                   primaryLabel={editId ? "Update" : "Create"}
                   onCancel={editId ? clearForm : undefined}
@@ -176,56 +340,106 @@ export default function ChapterHeadDashboard() {
           </div>
 
           <div className="lg:col-span-7">
-            <DataTable title="Your chapter opportunities" description="Only items for your chapter appear here.">
-              <div className="grid grid-cols-12 gap-3 border-b border-black/10 pb-3 text-xs font-semibold text-black/60">
-                <div className="col-span-6">Event</div>
-                <div className="col-span-3">Date</div>
-                <div className="col-span-3 text-right">Actions</div>
-              </div>
-
-              <div className="divide-y divide-black/10">
-                {opps.map((o) => (
-                  <div
-                    key={o.id}
-                    className="grid cursor-pointer grid-cols-12 gap-3 py-4 text-sm hover:bg-black/[0.02]"
-                    onClick={() => {
-                      setEditId(o.id);
-                      setName(o.event_name);
-                      setDate(o.event_date);
-                      setSdgs((o.sdgs ?? []).join(", "));
-                      setContact(o.contact_details);
-                    }}
-                  >
-                    <div className="col-span-6 font-semibold">{o.event_name}</div>
-                    <div className="col-span-3 text-black/65 tabular-nums">{o.event_date}</div>
-                    <div className="col-span-3 flex justify-end">
-                      <button
-                        className="rounded-full border border-black/10 px-3 py-1 text-xs text-black/65 hover:bg-black/5"
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          setBusy(true);
-                          try {
-                            await deleteOpportunity(o.id);
-                            await refresh();
-                            if (editId === o.id) clearForm();
-                            addToast({ type: "success", message: "Opportunity deleted." });
-                          } catch (err: unknown) {
-                            const msg = getErrorMessage(err, "Delete failed.");
-                            addToast({ type: "error", message: msg });
-                          } finally {
-                            setBusy(false);
-                          }
+            <Card className="border-black/10 bg-white p-6 sm:p-8">
+              <CardHeader className="p-0">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
+                  Your chapter opportunities
+                </div>
+                <div className="mt-2 text-sm text-black/65">
+                  Only items for your chapter appear here.
+                </div>
+              </CardHeader>
+              <CardContent className="mt-6 p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="w-[54%]">Event</TableHead>
+                      <TableHead className="w-[22%]">Date</TableHead>
+                      <TableHead className="w-[24%] text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {opps.map((o) => (
+                      <TableRow
+                        key={o.id}
+                        className="cursor-pointer"
+                        onClick={() => {
+                          setEditId(o.id);
+                          setName(o.event_name);
+                          setDate(o.event_date);
+                          setSdgs((o.sdgs ?? []).join(", "));
+                          setContact(o.contact_details);
                         }}
                       >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </DataTable>
+                        <TableCell className="font-semibold">{o.event_name}</TableCell>
+                        <TableCell className="text-black/65 tabular-nums">{o.event_date}</TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onSelect={(e) => {
+                                  e.preventDefault();
+                                  setEditId(o.id);
+                                  setName(o.event_name);
+                                  setDate(o.event_date);
+                                  setSdgs((o.sdgs ?? []).join(", "));
+                                  setContact(o.contact_details);
+                                }}
+                              >
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-red-600"
+                                onSelect={(e) => {
+                                  e.preventDefault();
+                                  setPendingDeleteId(o.id);
+                                }}
+                              >
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           </div>
         </div>
+
+        <AlertDialog open={Boolean(pendingDeleteId)} onOpenChange={(open) => !open && setPendingDeleteId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel asChild>
+                <Button type="button" variant="secondary">
+                  Cancel
+                </Button>
+              </AlertDialogCancel>
+              <AlertDialogAction asChild onClick={() => pendingDeleteId && runDelete(pendingDeleteId)}>
+                <Button type="button" variant="destructive" disabled={busy}>
+                  {busy ? "Deleting..." : "Delete"}
+                </Button>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CmsShell>
     </div>
   );

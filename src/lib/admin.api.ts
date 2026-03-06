@@ -40,6 +40,27 @@ export type SiteSettingsRow = {
   updated_at: string;
 };
 
+export type VolunteerSignupRow = {
+  id: string;
+  opportunity_id: string;
+  user_id: string | null;
+  full_name: string;
+  email: string;
+  phone: string;
+  message: string | null;
+  created_at: string;
+  opportunity: {
+    id: string;
+    event_name: string;
+    event_date: string;
+    chapter_id: string;
+    chapter: {
+      id: string;
+      name: string;
+    } | null;
+  } | null;
+};
+
 // ---------------- Programs ----------------
 export async function adminListPrograms(): Promise<ProgramRow[]> {
   const { data, error } = await supabase
@@ -145,4 +166,34 @@ export async function updateSiteSettingsRow(input: Partial<Omit<SiteSettingsRow,
     .update({ ...input, updated_at: new Date().toISOString() })
     .eq("id", true);
   if (error) throw error;
+}
+
+// --------------- Volunteer signups --------------
+export async function listVolunteerSignups(): Promise<VolunteerSignupRow[]> {
+  const { data, error } = await supabase
+    .from("volunteer_signups")
+    .select(
+      "id, opportunity_id, user_id, full_name, email, phone, message, created_at, opportunity:volunteer_opportunities!inner(id, event_name, event_date, chapter_id, chapter:chapters(id, name))"
+    )
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as unknown as VolunteerSignupRow[];
+}
+
+export async function listVolunteerSignupsByOpportunityIds(
+  opportunityIds: string[]
+): Promise<VolunteerSignupRow[]> {
+  if (opportunityIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from("volunteer_signups")
+    .select(
+      "id, opportunity_id, user_id, full_name, email, phone, message, created_at, opportunity:volunteer_opportunities!inner(id, event_name, event_date, chapter_id, chapter:chapters(id, name))"
+    )
+    .in("opportunity_id", opportunityIds)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as unknown as VolunteerSignupRow[];
 }
