@@ -8,27 +8,17 @@ import { Button } from "../components/ui/Button";
 import { listChapters, type Chapter } from "../lib/public.api";
 import { useToast } from "../components/ui/useToast";
 
-const MEMBERSHIP_FORM_EMBED_URL =
-  "https://docs.google.com/forms/d/e/1FAIpQLSdwMKgIjQNrlLH-j-Qdx0MrKxefxaLRC6gMI_oOgMTosDi_sQ/viewform?embedded=true";
 const MEMBERSHIP_FORM_FALLBACK_URL =
   "https://docs.google.com/forms/d/e/1FAIpQLSdwMKgIjQNrlLH-j-Qdx0MrKxefxaLRC6gMI_oOgMTosDi_sQ/viewform";
 
-const CHAPTER_FORM_EMBED_URL =
-  "https://docs.google.com/forms/d/e/1FAIpQLSefJ0IY39AUBd89A9VC0bojAQSPMXIqas9idU2gRxlSdg3Zkw/viewform?embedded=true";
+const CHAPTER_FORM_FALLBACK_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSefJ0IY39AUBd89A9VC0bojAQSPMXIqas9idU2gRxlSdg3Zkw/viewform";
 
-function toFallbackViewUrl(url: string) {
-  return url
-    .replace(/[?&]embedded=true(?=&|$)/, "")
-    .replace(/[?&]$/, "")
-    .replace("?&", "?");
-}
-
-const CHAPTER_FORM_FALLBACK_URL = toFallbackViewUrl(CHAPTER_FORM_EMBED_URL);
-
-type GoogleFormEmbedProps = {
+type GoogleFormCardProps = {
   title: string;
-  embedUrl: string;
   fallbackUrl: string;
+  description: string;
+  buttonLabel: string;
 };
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -39,20 +29,27 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
-function GoogleFormEmbed({ title, embedUrl, fallbackUrl }: GoogleFormEmbedProps) {
+function GoogleFormCard({
+  title,
+  fallbackUrl,
+  description,
+  buttonLabel,
+}: GoogleFormCardProps) {
   return (
-    <div className="overflow-x-hidden">
+    <div className="flex min-h-[320px] flex-col">
       <div className="text-sm font-semibold">{title}</div>
-      <div className="mt-4 overflow-hidden rounded-2xl">
-        <iframe
-          title={title}
-          src={embedUrl}
-          loading="lazy"
-          referrerPolicy="no-referrer"
-          className="h-[720px] w-full rounded-2xl border border-black/10 bg-white sm:h-[900px]"
-        />
+      <p className="mt-3 text-sm leading-6 text-black/65">{description}</p>
+      <div className="mt-5 rounded-2xl border border-black/10 bg-[rgb(var(--card))] p-4 text-sm text-black/65">
+        The application form opens in a new tab so you can complete it without leaving this page.
       </div>
-      <p className="mt-3 text-xs text-black/60">
+      <div className="mt-auto pt-6">
+        <a href={fallbackUrl} target="_blank" rel="noreferrer">
+          <Button size="lg" className="accent-glow w-full sm:w-auto">
+            {buttonLabel}
+          </Button>
+        </a>
+      </div>
+      <p className="mt-4 text-xs text-black/60">
         If the form doesn&apos;t load,{" "}
         <a
           href={fallbackUrl}
@@ -124,73 +121,68 @@ export default function MembershipChapter() {
       </section>
 
       <Section
-        eyebrow="Become a Member"
-        title="Membership application"
-        description="Fill out the form below. Our team will review your submission."
-      >
-        <Card data-reveal className="border-black/10 bg-white/70 p-6 sm:p-8">
-          <GoogleFormEmbed
-            title="Membership form"
-            embedUrl={MEMBERSHIP_FORM_EMBED_URL}
-            fallbackUrl={MEMBERSHIP_FORM_FALLBACK_URL}
-          />
-        </Card>
-      </Section>
-
-      <Section
-        eyebrow="Create a Chapter"
-        title="Request to create a chapter"
-        description="Submit your chapter proposal. We’ll contact you if approved."
+        title="Apply as a member or launch a chapter"
+        description="Choose the path that fits you best. Both forms open in a new tab so you can complete them without losing your place."
       >
         <div className="grid gap-6 lg:grid-cols-2">
           <Card data-reveal className="border-black/10 bg-white/70 p-6 sm:p-8">
-            <GoogleFormEmbed
-              title="Chapter proposal form"
-              embedUrl={CHAPTER_FORM_EMBED_URL}
-              fallbackUrl={CHAPTER_FORM_FALLBACK_URL}
+            <GoogleFormCard
+              title="Membership form"
+              fallbackUrl={MEMBERSHIP_FORM_FALLBACK_URL}
+              description="Fill out the membership application and our team will review your submission."
+              buttonLabel="Open Membership Form"
             />
           </Card>
 
-          <div className="space-y-4">
-            <Card data-reveal className="border-black/10 bg-[rgb(var(--card))] p-6">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
-                Note
-              </div>
-              <div className="mt-3 text-sm font-semibold">Approval notice</div>
-              <p className="mt-2 text-sm leading-6 text-black/65">
-                We will contact you if approved.
-              </p>
-              <div className="mt-5 rounded-2xl border border-black/10 bg-white p-4 text-sm text-black/65">
-                Tip: Ensure your contact details are correct so chapter onboarding is smooth.
-              </div>
-            </Card>
+          <Card data-reveal className="border-black/10 bg-white/70 p-6 sm:p-8">
+            <GoogleFormCard
+              title="Chapter proposal form"
+              fallbackUrl={CHAPTER_FORM_FALLBACK_URL}
+              description="Submit your chapter proposal. We’ll contact you if approved."
+              buttonLabel="Open Chapter Proposal Form"
+            />
+          </Card>
+        </div>
 
-            <Card data-reveal className="border-black/10 bg-white p-6">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
-                Chapters
-              </div>
-              {chapters.length === 0 ? (
-                <div className="mt-4 text-sm text-black/60">No chapters available yet.</div>
-              ) : (
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {chapters.map((c) => (
-                    <div
-                      key={c.id}
-                      data-reveal
-                      className="group rounded-2xl border border-black/10 bg-white/75 p-4 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_50px_rgba(2,6,23,0.10)]"
-                    >
-                      <div className="text-sm font-semibold">{c.name}</div>
-                      <div className="mt-1 text-sm text-black/60">{c.location ?? "Philippines"}</div>
-                      <div className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-black/60">
-                        <span className="size-1.5 rounded-full bg-[rgb(var(--accent))]" />
-                        View opportunities
-                      </div>
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <Card data-reveal className="border-black/10 bg-[rgb(var(--card))] p-6">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
+              Note
+            </div>
+            <div className="mt-3 text-sm font-semibold">Approval notice</div>
+            <p className="mt-2 text-sm leading-6 text-black/65">
+              We will contact you if approved.
+            </p>
+            <div className="mt-5 rounded-2xl border border-black/10 bg-white p-4 text-sm text-black/65">
+              Tip: Ensure your contact details are correct so chapter onboarding is smooth.
+            </div>
+          </Card>
+
+          <Card data-reveal className="border-black/10 bg-white p-6">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
+              Chapters
+            </div>
+            {chapters.length === 0 ? (
+              <div className="mt-4 text-sm text-black/60">No chapters available yet.</div>
+            ) : (
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {chapters.map((c) => (
+                  <div
+                    key={c.id}
+                    data-reveal
+                    className="group rounded-2xl border border-black/10 bg-white/75 p-4 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_50px_rgba(2,6,23,0.10)]"
+                  >
+                    <div className="text-sm font-semibold">{c.name}</div>
+                    <div className="mt-1 text-sm text-black/60">{c.location ?? "Philippines"}</div>
+                    <div className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-black/60">
+                      <span className="size-1.5 rounded-full bg-[rgb(var(--accent))]" />
+                      View opportunities
                     </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-          </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
         </div>
       </Section>
 

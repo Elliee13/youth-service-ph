@@ -142,7 +142,7 @@ export default function Home() {
             <div className="mx-auto max-w-3xl text-center">
               <h1
                 data-reveal
-                className="mt-3 [font-family:var(--font-display)] text-5xl leading-[0.95] tracking-[-0.03em] sm:text-6xl"
+                className="mt-3 [font-family:var(--font-display)] text-5xl leading-[0.95] tracking-[-0.03em] sm:text-6xl font-medium"
               >
                 Make youth service feel{" "}
                 <span className="text-[rgb(var(--accent))]">inevitable</span>.

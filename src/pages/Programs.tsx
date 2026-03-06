@@ -77,7 +77,6 @@ export default function Programs() {
       <Section
         eyebrow="Browse"
         title="Find the program that fits your community"
-        description="Clean grid density, consistent image treatment, and premium hover interactions."
       >
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {programs.map((p) => (

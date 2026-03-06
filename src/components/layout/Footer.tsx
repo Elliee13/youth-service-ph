@@ -35,17 +35,12 @@ export function Footer() {
           <p className="mt-4 text-sm leading-6 text-black/60">
             Join a chapter, volunteer for events, and create measurable impact aligned with the SDGs.
           </p>
-          <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/70 px-4 py-2 text-sm backdrop-blur">
-            <span className="size-2 rounded-full bg-[rgb(var(--accent))]" />
-            <span className="text-black/70">Orange accent system</span>
-          </div>
         </div>
       </div>
 
       <div className="border-t border-black/5">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-6 text-xs text-black/55 sm:px-6 lg:px-8">
           <span>© {new Date().getFullYear()} Youth Service Philippines</span>
-          <span>React • Tailwind • Three • GSAP • Supabase</span>
         </div>
       </div>
     </footer>
