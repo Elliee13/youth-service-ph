@@ -107,7 +107,7 @@ export function SignUpModal({
     } catch (e: unknown) {
       const { code, message: raw } = getErrorDetails(e);
       const msg =
-        code === "23505" || raw.toLowerCase().includes("unique_signup")
+        code === "23505" || code === "unique_signup" || raw.toLowerCase().includes("unique_signup")
         ? "Already applied for this opportunity."
         : raw || "Failed to sign up. Please try again.";
       addToast({ type: "error", message: msg });

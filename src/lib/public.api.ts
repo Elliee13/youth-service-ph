@@ -181,24 +181,72 @@ export type VolunteerSignup = {
   } | null;
 };
 
+type EdgeSignupResponse = {
+  ok?: boolean;
+  error?: string;
+  code?: string;
+};
+
+type ErrorWithCodeAndMessage = {
+  code?: string;
+  message?: string;
+};
+
+function toErrorWithCode(message: string, code?: string): ErrorWithCodeAndMessage {
+  const err = new Error(message) as ErrorWithCodeAndMessage;
+  if (code) err.code = code;
+  return err;
+}
+
 export async function signUpForOpportunity(input: VolunteerSignupInput): Promise<void> {
-  const { data: userData } = await supabase.auth.getUser();
-  const userId = userData.user?.id;
   const normalizedFullName = input.full_name.trim();
   const normalizedEmail = input.email.trim().toLowerCase();
   const normalizedPhone = input.phone.trim();
   const normalizedMessage = input.message?.trim() || null;
 
-  const { error } = await supabase.from("volunteer_signups").insert({
-    opportunity_id: input.opportunity_id,
-    full_name: normalizedFullName,
-    email: normalizedEmail,
-    phone: normalizedPhone,
-    message: normalizedMessage,
-    ...(userId ? { user_id: userId } : {}),
+  const { data, error } = await supabase.functions.invoke<EdgeSignupResponse>("volunteer-signup", {
+    body: {
+      opportunity_id: input.opportunity_id,
+      full_name: normalizedFullName,
+      email: normalizedEmail,
+      phone: normalizedPhone,
+      message: normalizedMessage,
+    },
   });
 
-  if (error) logAndThrow("signUpForOpportunity", error);
+  if (error) {
+    const maybeContext = error as { context?: Response };
+    if (maybeContext.context) {
+      const response = maybeContext.context;
+      let payload: EdgeSignupResponse | null = null;
+      try {
+        payload = (await response.json()) as EdgeSignupResponse;
+      } catch {
+        payload = null;
+      }
+
+      if (payload?.error) {
+        throw toErrorWithCode(payload.error, payload.code);
+      }
+    }
+
+    logAndThrow("signUpForOpportunity.invoke", error);
+  }
+
+  if (!data?.ok) {
+    if (data?.error) {
+      throw toErrorWithCode(data.error, data.code);
+    }
+    throw new Error("Failed to sign up. Please try again.");
+  }
+
+  if (data?.code === "unique_signup") {
+    throw toErrorWithCode("Already applied for this opportunity.", "unique_signup");
+  }
+
+  if (data?.error) {
+    throw toErrorWithCode(data.error, data.code);
+  }
 }
 
 export async function listMyVolunteerSignups(): Promise<VolunteerSignup[]> {
