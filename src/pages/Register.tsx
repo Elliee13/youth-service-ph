@@ -120,131 +120,135 @@ export default function Register() {
           </p>
 
           <div className="mt-8 grid gap-6 lg:grid-cols-2">
-            <Card className="border-black/10 bg-white p-6 sm:p-8">
-              <div className="text-sm font-semibold">Create account</div>
-              <p className="mt-2 text-xs text-black/60">
-                Use your email/password or sign up with Google.
-              </p>
+            <div id="create-account">
+              <Card className="border-black/10 bg-white p-6 sm:p-8">
+                <div className="text-sm font-semibold">Create account</div>
+                <p className="mt-2 text-xs text-black/60">
+                  Use your email/password or sign up with Google.
+                </p>
 
-              <form onSubmit={handleSignUp} className="mt-5 grid gap-4">
-                <div>
-                  <label className="text-xs font-medium text-black/70">Full name</label>
-                  <input
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    type="text"
-                    required
-                    className="mt-2 h-11 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[rgba(255,119,31,0.45)]"
-                    placeholder="Juan dela Cruz"
-                  />
+                <form onSubmit={handleSignUp} className="mt-5 grid gap-4">
+                  <div>
+                    <label className="text-xs font-medium text-black/70">Full name</label>
+                    <input
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      type="text"
+                      required
+                      className="mt-2 h-11 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[rgba(255,119,31,0.45)]"
+                      placeholder="Juan dela Cruz"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-black/70">Phone number</label>
+                    <input
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      type="tel"
+                      className="mt-2 h-11 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[rgba(255,119,31,0.45)]"
+                      placeholder="09123456789"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-black/70">Email</label>
+                    <input
+                      value={signUpEmail}
+                      onChange={(e) => setSignUpEmail(e.target.value)}
+                      type="email"
+                      required
+                      className="mt-2 h-11 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[rgba(255,119,31,0.45)]"
+                      placeholder="you@example.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-black/70">Password</label>
+                    <input
+                      value={signUpPassword}
+                      onChange={(e) => setSignUpPassword(e.target.value)}
+                      type="password"
+                      required
+                      className="mt-2 h-11 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[rgba(255,119,31,0.45)]"
+                      placeholder="Create a strong password"
+                    />
+                  </div>
+
+                  <Button size="lg" className="accent-glow" disabled={busy}>
+                    {busy ? "Creating account..." : "Create account"}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={handleGoogleAuth}
+                    disabled={busy}
+                  >
+                    Continue with Google
+                  </Button>
+                </form>
+              </Card>
+            </div>
+
+            <div id="sign-in">
+              <Card className="border-black/10 bg-white p-6 sm:p-8">
+                <div className="text-sm font-semibold">Sign in</div>
+                <p className="mt-2 text-xs text-black/60">
+                  Already registered? Sign in to access your saved details.
+                </p>
+
+                <form onSubmit={handleSignIn} className="mt-5 grid gap-4">
+                  <div>
+                    <label className="text-xs font-medium text-black/70">Email</label>
+                    <input
+                      value={signInEmail}
+                      onChange={(e) => setSignInEmail(e.target.value)}
+                      type="email"
+                      required
+                      className="mt-2 h-11 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[rgba(255,119,31,0.45)]"
+                      placeholder="you@example.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-black/70">Password</label>
+                    <input
+                      value={signInPassword}
+                      onChange={(e) => setSignInPassword(e.target.value)}
+                      type="password"
+                      required
+                      className="mt-2 h-11 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[rgba(255,119,31,0.45)]"
+                      placeholder="Your password"
+                    />
+                  </div>
+
+                  <Button size="lg" className="accent-glow" disabled={busy}>
+                    {busy ? "Signing in..." : "Sign in"}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={handleGoogleAuth}
+                    disabled={busy}
+                  >
+                    Sign in with Google
+                  </Button>
+                </form>
+
+                <div className="mt-6 text-xs text-black/55">
+                  Admin or chapter head?{" "}
+                  <Link
+                    to="/staff"
+                    className="font-semibold text-[rgb(var(--accent))] hover:underline"
+                  >
+                    Use the staff sign-in
+                  </Link>
+                  .
                 </div>
-
-                <div>
-                  <label className="text-xs font-medium text-black/70">Phone number</label>
-                  <input
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    type="tel"
-                    className="mt-2 h-11 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[rgba(255,119,31,0.45)]"
-                    placeholder="09123456789"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-black/70">Email</label>
-                  <input
-                    value={signUpEmail}
-                    onChange={(e) => setSignUpEmail(e.target.value)}
-                    type="email"
-                    required
-                    className="mt-2 h-11 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[rgba(255,119,31,0.45)]"
-                    placeholder="you@example.com"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-black/70">Password</label>
-                  <input
-                    value={signUpPassword}
-                    onChange={(e) => setSignUpPassword(e.target.value)}
-                    type="password"
-                    required
-                    className="mt-2 h-11 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[rgba(255,119,31,0.45)]"
-                    placeholder="Create a strong password"
-                  />
-                </div>
-
-                <Button size="lg" className="accent-glow" disabled={busy}>
-                  {busy ? "Creating account..." : "Create account"}
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleGoogleAuth}
-                  disabled={busy}
-                >
-                  Continue with Google
-                </Button>
-              </form>
-            </Card>
-
-            <Card className="border-black/10 bg-white p-6 sm:p-8">
-              <div className="text-sm font-semibold">Sign in</div>
-              <p className="mt-2 text-xs text-black/60">
-                Already registered? Sign in to access your saved details.
-              </p>
-
-              <form onSubmit={handleSignIn} className="mt-5 grid gap-4">
-                <div>
-                  <label className="text-xs font-medium text-black/70">Email</label>
-                  <input
-                    value={signInEmail}
-                    onChange={(e) => setSignInEmail(e.target.value)}
-                    type="email"
-                    required
-                    className="mt-2 h-11 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[rgba(255,119,31,0.45)]"
-                    placeholder="you@example.com"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-black/70">Password</label>
-                  <input
-                    value={signInPassword}
-                    onChange={(e) => setSignInPassword(e.target.value)}
-                    type="password"
-                    required
-                    className="mt-2 h-11 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[rgba(255,119,31,0.45)]"
-                    placeholder="Your password"
-                  />
-                </div>
-
-                <Button size="lg" className="accent-glow" disabled={busy}>
-                  {busy ? "Signing in..." : "Sign in"}
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleGoogleAuth}
-                  disabled={busy}
-                >
-                  Sign in with Google
-                </Button>
-              </form>
-
-              <div className="mt-6 text-xs text-black/55">
-                Admin or chapter head?{" "}
-                <Link
-                  to="/staff"
-                  className="font-semibold text-[rgb(var(--accent))] hover:underline"
-                >
-                  Use the staff sign-in
-                </Link>
-                .
-              </div>
-            </Card>
+              </Card>
+            </div>
           </div>
 
         </div>

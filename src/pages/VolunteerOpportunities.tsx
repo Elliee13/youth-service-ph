@@ -14,6 +14,7 @@ import { SignUpModal } from "../components/volunteer/SignUpModal";
 import { useAuth } from "../auth/useAuth";
 import { Link } from "react-router-dom";
 import { useToast } from "../components/ui/useToast";
+import { AuthRequiredDialog } from "../components/auth/AuthRequiredDialog";
 
 function getErrorMessage(error: unknown, fallback: string) {
   if (error && typeof error === "object" && "message" in error) {
@@ -29,6 +30,7 @@ export default function VolunteerOpportunities() {
 
   const [items, setItems] = useState<VolunteerOpportunity[]>([]);
   const [mySignups, setMySignups] = useState<VolunteerSignup[]>([]);
+  const [authPromptOpen, setAuthPromptOpen] = useState(false);
   const [signUpModal, setSignUpModal] = useState<{
     opportunity: VolunteerOpportunity;
   } | null>(null);
@@ -167,7 +169,13 @@ export default function VolunteerOpportunities() {
                   <Button
                     size="sm"
                     className="accent-glow"
-                    onClick={() => setSignUpModal({ opportunity: o })}
+                    onClick={() => {
+                      if (!user) {
+                        setAuthPromptOpen(true);
+                        return;
+                      }
+                      setSignUpModal({ opportunity: o });
+                    }}
                   >
                     Sign Up Now
                   </Button>
@@ -236,6 +244,13 @@ export default function VolunteerOpportunities() {
           }}
         />
       ) : null}
+
+      <AuthRequiredDialog
+        open={authPromptOpen}
+        onOpenChange={setAuthPromptOpen}
+        title="Sign in to continue"
+        description="Create a volunteer account or sign in first before signing up for opportunities."
+      />
     </div>
   );
 }

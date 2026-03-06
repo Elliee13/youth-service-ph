@@ -7,6 +7,8 @@ import { Link } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { listChapters, type Chapter } from "../lib/public.api";
 import { useToast } from "../components/ui/useToast";
+import { useAuth } from "../auth/useAuth";
+import { AuthRequiredDialog } from "../components/auth/AuthRequiredDialog";
 
 const MEMBERSHIP_FORM_FALLBACK_URL =
   "https://docs.google.com/forms/d/e/1FAIpQLSdwMKgIjQNrlLH-j-Qdx0MrKxefxaLRC6gMI_oOgMTosDi_sQ/viewform";
@@ -19,6 +21,8 @@ type GoogleFormCardProps = {
   fallbackUrl: string;
   description: string;
   buttonLabel: string;
+  canOpen: boolean;
+  onRequireAuth: () => void;
 };
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -34,6 +38,8 @@ function GoogleFormCard({
   fallbackUrl,
   description,
   buttonLabel,
+  canOpen,
+  onRequireAuth,
 }: GoogleFormCardProps) {
   return (
     <div className="flex min-h-[320px] flex-col">
@@ -43,23 +49,37 @@ function GoogleFormCard({
         The application form opens in a new tab so you can complete it without leaving this page.
       </div>
       <div className="mt-auto pt-6">
-        <a href={fallbackUrl} target="_blank" rel="noreferrer">
-          <Button size="lg" className="accent-glow w-full sm:w-auto">
+        {canOpen ? (
+          <a href={fallbackUrl} target="_blank" rel="noreferrer">
+            <Button size="lg" className="accent-glow w-full sm:w-auto">
+              {buttonLabel}
+            </Button>
+          </a>
+        ) : (
+          <Button size="lg" className="accent-glow w-full sm:w-auto" onClick={onRequireAuth}>
             {buttonLabel}
           </Button>
-        </a>
+        )}
       </div>
       <p className="mt-4 text-xs text-black/60">
-        If the form doesn&apos;t load,{" "}
-        <a
-          href={fallbackUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="font-semibold text-[rgb(var(--accent))] hover:underline"
-        >
-          open it here
-        </a>
-        .
+        {canOpen ? (
+          <>
+            If the form doesn&apos;t load,{" "}
+            <a
+              href={fallbackUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-[rgb(var(--accent))] hover:underline"
+            >
+              open it here
+            </a>
+            .
+          </>
+        ) : (
+          <>
+            Sign in or create an account first to access the application form.
+          </>
+        )}
       </p>
     </div>
   );
@@ -70,6 +90,8 @@ export default function MembershipChapter() {
   useGsapReveal(scope);
 
   const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [authPromptOpen, setAuthPromptOpen] = useState(false);
+  const { user } = useAuth();
   const { addToast } = useToast();
 
   useEffect(() => {
@@ -131,6 +153,8 @@ export default function MembershipChapter() {
               fallbackUrl={MEMBERSHIP_FORM_FALLBACK_URL}
               description="Fill out the membership application and our team will review your submission."
               buttonLabel="Open Membership Form"
+              canOpen={Boolean(user)}
+              onRequireAuth={() => setAuthPromptOpen(true)}
             />
           </Card>
 
@@ -140,6 +164,8 @@ export default function MembershipChapter() {
               fallbackUrl={CHAPTER_FORM_FALLBACK_URL}
               description="Submit your chapter proposal. We’ll contact you if approved."
               buttonLabel="Open Chapter Proposal Form"
+              canOpen={Boolean(user)}
+              onRequireAuth={() => setAuthPromptOpen(true)}
             />
           </Card>
         </div>
@@ -217,6 +243,8 @@ export default function MembershipChapter() {
           </div>
         </div>
       </Section>
+
+      <AuthRequiredDialog open={authPromptOpen} onOpenChange={setAuthPromptOpen} />
     </div>
   );
 }
