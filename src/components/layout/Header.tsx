@@ -25,12 +25,6 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, profile } = useAuth();
   const showPublicAccount = Boolean(user && !profile?.role);
-  const staffDashboardPath =
-    profile?.role === "admin"
-      ? "/admin"
-      : profile?.role === "chapter_head"
-        ? "/chapter-head"
-        : null;
 
   return (
     <header
@@ -74,13 +68,6 @@ export function Header() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          {staffDashboardPath ? (
-            <Link to={staffDashboardPath}>
-              <Button size="sm" className="accent-glow">
-                Go to Dashboard
-              </Button>
-            </Link>
-          ) : null}
           {showPublicAccount ? (
             <Link
               to="/my-account"
@@ -102,13 +89,6 @@ export function Header() {
 
         {/* Mobile quick access */}
         <div className="flex items-center gap-2 md:hidden">
-          {staffDashboardPath ? (
-            <Link to={staffDashboardPath}>
-              <Button size="sm" className="accent-glow">
-                Dashboard
-              </Button>
-            </Link>
-          ) : null}
           {showPublicAccount ? (
             <Link
               to="/my-account"
@@ -169,13 +149,6 @@ export function Header() {
 
                 <div className="border-t border-black/10 px-5 py-5">
                   <div className="grid gap-3">
-                    {staffDashboardPath ? (
-                      <Link to={staffDashboardPath} onClick={() => setMobileOpen(false)}>
-                        <Button size="sm" className="w-full accent-glow">
-                          Go to Dashboard
-                        </Button>
-                      </Link>
-                    ) : null}
                     {showPublicAccount ? (
                       <Link to="/my-account" onClick={() => setMobileOpen(false)}>
                         <Button variant="secondary" size="sm" className="w-full">

@@ -1,15 +1,29 @@
 import { Suspense } from "react";
-import { Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { SkipToContent } from "../ui/SkipToContent";
 import { useHeaderChrome } from "../../hooks/useHeaderChrome";
 import { PageTransition } from "../motion/PageTransition";
 import { useScrollToTop } from "../../hooks/useScrollToTop";
+import { useAuth } from "../../auth/useAuth";
 
 export function PublicLayout() {
   useHeaderChrome();
   useScrollToTop();
+  const location = useLocation();
+  const { loading, profile } = useAuth();
+
+  const staffDashboardPath =
+    profile?.role === "admin"
+      ? "/admin"
+      : profile?.role === "chapter_head"
+        ? "/chapter-head"
+        : null;
+
+  if (!loading && staffDashboardPath && location.pathname !== staffDashboardPath) {
+    return <Navigate to={staffDashboardPath} replace />;
+  }
 
   return (
     <div className="min-h-dvh bg-[rgb(var(--bg))] text-[rgb(var(--fg))] [font-family:var(--font-sans)]">
