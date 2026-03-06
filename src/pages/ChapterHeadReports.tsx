@@ -5,10 +5,17 @@ import { Button } from "../components/ui/shadcn/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/shadcn/card";
 import { useAuth } from "../auth/useAuth";
 import { useGsapReveal } from "../hooks/useGsapReveal";
-import { listOpportunities, listVolunteerSignupsByOpportunityIds, type OpportunityRow, type VolunteerSignupRow } from "../lib/admin.api";
+import { withTimeout } from "../lib/async";
+import {
+  listOpportunities,
+  listVolunteerSignupsByOpportunityIds,
+  type OpportunityRow,
+  type VolunteerSignupRow,
+} from "../lib/admin.api";
 import { useToast } from "../components/ui/useToast";
 
 type PostgrestLikeError = { message?: string };
+type QueryState = "loading" | "error" | "empty" | "ready";
 
 function getErrorMessage(error: unknown, fallback: string) {
   if (error && typeof error === "object" && "message" in error) {
@@ -21,6 +28,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 export default function ChapterHeadReports() {
   const scope = useRef<HTMLDivElement | null>(null);
+  const aliveRef = useRef(true);
   useGsapReveal(scope);
 
   const { profile } = useAuth();
@@ -29,33 +37,53 @@ export default function ChapterHeadReports() {
 
   const [opportunities, setOpportunities] = useState<OpportunityRow[]>([]);
   const [signups, setSignups] = useState<VolunteerSignupRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [queryState, setQueryState] = useState<QueryState>("loading");
 
   const refresh = useCallback(async () => {
     if (!chapterId) {
+      if (!aliveRef.current) return;
       setOpportunities([]);
       setSignups([]);
-      setLoading(false);
+      setQueryState("empty");
       return;
     }
 
-    setLoading(true);
+    if (aliveRef.current) setQueryState("loading");
+
     try {
-      const chapterOpportunities = await listOpportunities(chapterId);
-      setOpportunities(chapterOpportunities);
-      const chapterSignups = await listVolunteerSignupsByOpportunityIds(
-        chapterOpportunities.map((opportunity) => opportunity.id)
+      const chapterOpportunities = await withTimeout(
+        listOpportunities(chapterId),
+        15000,
+        "Chapter opportunities request timed out. Please try again."
       );
+      if (!aliveRef.current) return;
+
+      setOpportunities(chapterOpportunities);
+      const chapterSignups = await withTimeout(
+        listVolunteerSignupsByOpportunityIds(chapterOpportunities.map((opportunity) => opportunity.id)),
+        15000,
+        "Volunteer signups request timed out. Please try again."
+      );
+      if (!aliveRef.current) return;
+
       setSignups(chapterSignups);
+      setQueryState(chapterSignups.length === 0 ? "empty" : "ready");
     } catch (error: unknown) {
+      if (!aliveRef.current) return;
       addToast({ type: "error", message: getErrorMessage(error, "Failed to load reports.") });
-    } finally {
-      setLoading(false);
+      setQueryState("error");
     }
   }, [addToast, chapterId]);
 
   useEffect(() => {
-    refresh().catch(() => undefined);
+    aliveRef.current = true;
+    const timeoutId = window.setTimeout(() => {
+      refresh().catch(() => undefined);
+    }, 0);
+    return () => {
+      window.clearTimeout(timeoutId);
+      aliveRef.current = false;
+    };
   }, [refresh]);
 
   const upcomingOpportunityCount = useMemo(() => {
@@ -76,7 +104,12 @@ export default function ChapterHeadReports() {
             <div>
               <div className="mt-1 text-2xl font-semibold tracking-tight">Performance snapshot</div>
             </div>
-            <Button type="button" variant="outline" onClick={() => refresh().catch(() => undefined)} disabled={loading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => refresh().catch(() => undefined)}
+              disabled={queryState === "loading"}
+            >
               <RefreshCw className="mr-2 h-4 w-4" />
               Refresh
             </Button>
@@ -89,7 +122,9 @@ export default function ChapterHeadReports() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
-                  <div className="text-3xl font-semibold tabular-nums">{opportunities.length}</div>
+                  <div className="text-3xl font-semibold tabular-nums">
+                    {queryState === "error" || queryState === "loading" ? "—" : opportunities.length}
+                  </div>
                   <BarChart3 className="h-4 w-4 text-black/45" />
                 </div>
               </CardContent>
@@ -100,7 +135,9 @@ export default function ChapterHeadReports() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
-                  <div className="text-3xl font-semibold tabular-nums">{signups.length}</div>
+                  <div className="text-3xl font-semibold tabular-nums">
+                    {queryState === "error" || queryState === "loading" ? "—" : signups.length}
+                  </div>
                   <Users className="h-4 w-4 text-black/45" />
                 </div>
               </CardContent>
@@ -111,13 +148,29 @@ export default function ChapterHeadReports() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
-                  <div className="text-3xl font-semibold tabular-nums">{upcomingOpportunityCount}</div>
+                  <div className="text-3xl font-semibold tabular-nums">
+                    {queryState === "error" || queryState === "loading" ? "—" : upcomingOpportunityCount}
+                  </div>
                   <CalendarClock className="h-4 w-4 text-black/45" />
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
+
+        {chapterId && queryState === "error" ? (
+          <div className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <div>Failed to load reports.</div>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-3"
+              onClick={() => refresh().catch(() => undefined)}
+            >
+              Retry
+            </Button>
+          </div>
+        ) : null}
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           <Card className="border-black/10 bg-white">
@@ -129,9 +182,11 @@ export default function ChapterHeadReports() {
                 <div className="rounded-2xl border border-black/10 bg-[rgb(var(--card))] p-4 text-sm text-black/65">
                   Your account does not have a chapter assigned yet.
                 </div>
-              ) : latestSignups.length === 0 ? (
+              ) : queryState === "loading" ? (
+                <div className="text-sm text-black/55">Loading reports...</div>
+              ) : queryState === "empty" ? (
                 <div className="text-sm text-black/55">No signups recorded yet.</div>
-              ) : (
+              ) : queryState === "ready" ? (
                 latestSignups.map((signup) => (
                   <div key={signup.id} className="rounded-2xl border border-black/10 p-4">
                     <div className="font-medium">{signup.full_name}</div>
@@ -143,7 +198,7 @@ export default function ChapterHeadReports() {
                     </div>
                   </div>
                 ))
-              )}
+              ) : null}
             </CardContent>
           </Card>
 

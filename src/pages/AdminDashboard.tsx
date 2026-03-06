@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Building2, CalendarClock, FolderKanban, MoreHorizontal, Plus, RefreshCw, Users } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { Card } from "../components/ui/Card";
@@ -43,11 +43,13 @@ import {
   type ProgramRow,
   type SiteSettingsRow,
 } from "../lib/admin.api";
+import { withTimeout } from "../lib/async";
 import { uploadProgramImage } from "../lib/storage";
 import { useToast } from "../components/ui/useToast";
 
 type Tab = "programs" | "chapters" | "opportunities" | "settings";
 type PostgrestLikeError = { code?: string; message?: string };
+type QueryState = "loading" | "error" | "ready";
 type AdminDashboardProps = {
   forcedTab?: Tab;
   showOverview?: boolean;
@@ -79,6 +81,7 @@ export default function AdminDashboard({
   subtitle = "Manage public content: programs, chapters, opportunities, and global site settings.",
 }: AdminDashboardProps) {
   const scope = useRef<HTMLDivElement | null>(null);
+  const aliveRef = useRef(true);
   useGsapReveal(scope);
 
   const [tab, setTab] = useState<Tab>(forcedTab ?? "programs");
@@ -89,7 +92,15 @@ export default function AdminDashboard({
   const [opps, setOpps] = useState<OpportunityRow[]>([]);
   const [settings, setSettings] = useState<SiteSettingsRow | null>(null);
 
-  const [busy, setBusy] = useState(false);
+  const [queryState, setQueryState] = useState<QueryState>("loading");
+  const [uploadingProgramImage, setUploadingProgramImage] = useState(false);
+  const [savingProgram, setSavingProgram] = useState(false);
+  const [savingChapter, setSavingChapter] = useState(false);
+  const [savingOpportunity, setSavingOpportunity] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [deletingProgramId, setDeletingProgramId] = useState<string | null>(null);
+  const [deletingChapterId, setDeletingChapterId] = useState<string | null>(null);
+  const [deletingOpportunityId, setDeletingOpportunityId] = useState<string | null>(null);
   const [params, setParams] = useSearchParams();
   const { addToast } = useToast();
 
@@ -139,33 +150,75 @@ export default function AdminDashboard({
     return opps.filter((o) => o.event_date >= today).length;
   }, [opps]);
 
-  async function refreshAll() {
-    const [p, c, o, s] = await Promise.all([
-      adminListPrograms(),
-      adminListChapters(),
-      listOpportunities(),
-      getSiteSettingsRow(),
-    ]);
-    setPrograms(p);
-    setChapters(c);
-    setOpps(o);
-    setSettings(s);
+  const hasLoadedDashboardData =
+    programs.length > 0 || chapters.length > 0 || opps.length > 0 || settings !== null;
+  const shouldRenderDashboard = queryState === "ready" || hasLoadedDashboardData;
 
-    // hydrate settings fields
-    setSProjects(s.projects_count);
-    setSChapters(s.chapters_count);
-    setSMembers(s.members_count);
-    setSEmail(s.contact_email);
-    setSFacebook(s.contact_facebook);
-    setSMobile(s.contact_mobile);
-  }
+  const refreshAll = useCallback(async () => {
+    if (aliveRef.current) setQueryState("loading");
+
+    const sections = await Promise.allSettled([
+      withTimeout(adminListPrograms(), 15000, "Programs request timed out. Please try again."),
+      withTimeout(adminListChapters(), 15000, "Chapters request timed out. Please try again."),
+      withTimeout(listOpportunities(), 15000, "Opportunities request timed out. Please try again."),
+      withTimeout(getSiteSettingsRow(), 15000, "Settings request timed out. Please try again."),
+    ]);
+
+    if (!aliveRef.current) return;
+
+    const [programsResult, chaptersResult, opportunitiesResult, settingsResult] = sections;
+    const failures: string[] = [];
+    let successCount = 0;
+
+    if (programsResult.status === "fulfilled") {
+      setPrograms(programsResult.value);
+      successCount += 1;
+    } else {
+      failures.push(getErrorMessage(programsResult.reason, "Failed to load programs."));
+    }
+
+    if (chaptersResult.status === "fulfilled") {
+      setChapters(chaptersResult.value);
+      successCount += 1;
+    } else {
+      failures.push(getErrorMessage(chaptersResult.reason, "Failed to load chapters."));
+    }
+
+    if (opportunitiesResult.status === "fulfilled") {
+      setOpps(opportunitiesResult.value);
+      successCount += 1;
+    } else {
+      failures.push(getErrorMessage(opportunitiesResult.reason, "Failed to load opportunities."));
+    }
+
+    if (settingsResult.status === "fulfilled") {
+      const nextSettings = settingsResult.value;
+      setSettings(nextSettings);
+      setSProjects(nextSettings.projects_count);
+      setSChapters(nextSettings.chapters_count);
+      setSMembers(nextSettings.members_count);
+      setSEmail(nextSettings.contact_email);
+      setSFacebook(nextSettings.contact_facebook);
+      setSMobile(nextSettings.contact_mobile);
+      successCount += 1;
+    } else {
+      failures.push(getErrorMessage(settingsResult.reason, "Failed to load site settings."));
+    }
+
+    if (failures.length > 0) {
+      addToast({ type: "error", message: failures[0] });
+    }
+
+    setQueryState(successCount > 0 ? "ready" : "error");
+  }, [addToast]);
 
   useEffect(() => {
-    refreshAll().catch((e: unknown) => {
-      const msg = getErrorMessage(e, "Failed to load dashboard.");
-      addToast({ type: "error", message: msg });
-    });
-  }, [addToast]);
+    aliveRef.current = true;
+    refreshAll().catch(() => undefined);
+    return () => {
+      aliveRef.current = false;
+    };
+  }, [refreshAll]);
 
   useEffect(() => {
     if (params.get("signed_in") === "1") {
@@ -230,22 +283,28 @@ export default function AdminDashboard({
 
   // ✅ Updated: requires a programId
   async function handleUploadProgramImage(file: File, programId: string) {
-    setBusy(true);
+    setUploadingProgramImage(true);
     try {
-      const { publicUrl } = await uploadProgramImage(file, programId);
+      const { publicUrl } = await withTimeout(
+        uploadProgramImage(file, programId),
+        15000,
+        "Image upload timed out. Please try again."
+      );
+      if (!aliveRef.current) return;
       setPImageUrl(publicUrl);
       addToast({ type: "success", message: "Image uploaded." });
     } catch (e: unknown) {
+      if (!aliveRef.current) return;
       const msg = getErrorMessage(e, "Image upload failed.");
       addToast({ type: "error", message: msg });
     } finally {
-      setBusy(false);
+      if (aliveRef.current) setUploadingProgramImage(false);
     }
   }
 
   async function submitProgram(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true);
+    setSavingProgram(true);
     try {
       if (!pTitle.trim() || !pDesc.trim()) {
         addToast({ type: "error", message: "Program title and description are required." });
@@ -253,34 +312,44 @@ export default function AdminDashboard({
       }
 
       if (pEditId) {
-        await adminUpdateProgram(pEditId, {
-          title: pTitle.trim(),
-          description: pDesc.trim(),
-          image_url: pImageUrl,
-        });
+        await withTimeout(
+          adminUpdateProgram(pEditId, {
+            title: pTitle.trim(),
+            description: pDesc.trim(),
+            image_url: pImageUrl,
+          }),
+          15000,
+          "Program save timed out. Please try again."
+        );
         addToast({ type: "success", message: "Program updated." });
       } else {
-        await adminCreateProgram({
-          title: pTitle.trim(),
-          description: pDesc.trim(),
-          image_url: pImageUrl,
-        });
+        await withTimeout(
+          adminCreateProgram({
+            title: pTitle.trim(),
+            description: pDesc.trim(),
+            image_url: pImageUrl,
+          }),
+          15000,
+          "Program save timed out. Please try again."
+        );
         addToast({ type: "success", message: "Program created." });
       }
 
       await refreshAll();
+      if (!aliveRef.current) return;
       clearProgramForm();
     } catch (e: unknown) {
+      if (!aliveRef.current) return;
       const msg = getErrorMessage(e, "Failed to save program.");
       addToast({ type: "error", message: msg });
     } finally {
-      setBusy(false);
+      if (aliveRef.current) setSavingProgram(false);
     }
   }
 
   async function submitChapter(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true);
+    setSavingChapter(true);
     try {
       if (!cName.trim()) {
         addToast({ type: "error", message: "Chapter name is required." });
@@ -297,26 +366,32 @@ export default function AdminDashboard({
       };
 
       if (cEditId) {
-        await adminUpdateChapter(cEditId, payload);
+        await withTimeout(
+          adminUpdateChapter(cEditId, payload),
+          15000,
+          "Chapter save timed out. Please try again."
+        );
         addToast({ type: "success", message: "Chapter updated." });
       } else {
-        await adminCreateChapter(payload);
+        await withTimeout(adminCreateChapter(payload), 15000, "Chapter save timed out. Please try again.");
         addToast({ type: "success", message: "Chapter created." });
       }
 
       await refreshAll();
+      if (!aliveRef.current) return;
       clearChapterForm();
     } catch (e: unknown) {
+      if (!aliveRef.current) return;
       const msg = getErrorMessage(e, "Failed to save chapter.");
       addToast({ type: "error", message: msg });
     } finally {
-      setBusy(false);
+      if (aliveRef.current) setSavingChapter(false);
     }
   }
 
   async function submitOpp(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true);
+    setSavingOpportunity(true);
     try {
       if (!oName.trim() || !oDate || !oChapterId) {
         addToast({ type: "error", message: "Event name, date, and chapter are required." });
@@ -337,43 +412,55 @@ export default function AdminDashboard({
       };
 
       if (oEditId) {
-        await updateOpportunity(oEditId, payload);
+        await withTimeout(
+          updateOpportunity(oEditId, payload),
+          15000,
+          "Opportunity save timed out. Please try again."
+        );
         addToast({ type: "success", message: "Opportunity updated." });
       } else {
-        await createOpportunity(payload);
+        await withTimeout(createOpportunity(payload), 15000, "Opportunity save timed out. Please try again.");
         addToast({ type: "success", message: "Opportunity created." });
       }
 
       await refreshAll();
+      if (!aliveRef.current) return;
       clearOppForm();
     } catch (e: unknown) {
+      if (!aliveRef.current) return;
       const msg = getErrorMessage(e, "Failed to save opportunity.");
       addToast({ type: "error", message: msg });
     } finally {
-      setBusy(false);
+      if (aliveRef.current) setSavingOpportunity(false);
     }
   }
 
   async function submitSettings(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true);
+    setSavingSettings(true);
     try {
-      await updateSiteSettingsRow({
-        projects_count: Number(sProjects) || 0,
-        chapters_count: Number(sChapters) || 0,
-        members_count: Number(sMembers) || 0,
-        contact_email: sEmail.trim(),
-        contact_facebook: sFacebook.trim(),
-        contact_mobile: sMobile.trim(),
-      });
+      await withTimeout(
+        updateSiteSettingsRow({
+          projects_count: Number(sProjects) || 0,
+          chapters_count: Number(sChapters) || 0,
+          members_count: Number(sMembers) || 0,
+          contact_email: sEmail.trim(),
+          contact_facebook: sFacebook.trim(),
+          contact_mobile: sMobile.trim(),
+        }),
+        15000,
+        "Settings save timed out. Please try again."
+      );
 
       await refreshAll();
+      if (!aliveRef.current) return;
       addToast({ type: "success", message: "Site settings updated." });
     } catch (e: unknown) {
+      if (!aliveRef.current) return;
       const msg = getErrorMessage(e, "Failed to update site settings.");
       addToast({ type: "error", message: msg });
     } finally {
-      setBusy(false);
+      if (aliveRef.current) setSavingSettings(false);
     }
   }
 
@@ -384,7 +471,27 @@ export default function AdminDashboard({
         subtitle={subtitle}
 
       >
-        {showOverview ? (
+        {queryState === "loading" && !hasLoadedDashboardData ? (
+          <Card className="border-black/10 bg-white p-6 text-sm text-black/55">
+            Loading dashboard...
+          </Card>
+        ) : null}
+
+        {queryState === "error" && !hasLoadedDashboardData ? (
+          <Card className="border-red-200 bg-red-50 p-6 text-sm text-red-700">
+            <div>Failed to load dashboard.</div>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-4"
+              onClick={() => refreshAll().catch(() => undefined)}
+            >
+              Retry
+            </Button>
+          </Card>
+        ) : null}
+
+        {shouldRenderDashboard && showOverview ? (
         <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm mb-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -398,12 +505,8 @@ export default function AdminDashboard({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => {
-                  refreshAll().catch((e: unknown) => {
-                    const msg = getErrorMessage(e, "Failed to load dashboard.");
-                    addToast({ type: "error", message: msg });
-                  });
-                }}
+                onClick={() => refreshAll().catch(() => undefined)}
+                disabled={queryState === "loading"}
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Refresh
@@ -445,7 +548,7 @@ export default function AdminDashboard({
         ) : null}
 
         {/* Tabs */}
-        {showTabs ? (
+        {shouldRenderDashboard && showTabs ? (
         <Card className="border-black/10 bg-white/70 p-3 backdrop-blur">
           <div className="grid gap-2 sm:grid-cols-4">
             {tabs.map((t) => (
@@ -470,7 +573,7 @@ export default function AdminDashboard({
 
 
         {/* Programs */}
-        {tab === "programs" ? (
+        {shouldRenderDashboard && tab === "programs" ? (
           <div className="mt-8 grid gap-6 lg:grid-cols-12">
             <div className="lg:col-span-5">
               <Card className="border-black/10 bg-white p-6 sm:p-8">
@@ -501,6 +604,7 @@ export default function AdminDashboard({
                             type="file"
                             accept="image/*"
                             className="hidden"
+                            disabled={uploadingProgramImage}
                             onChange={(e) => {
                               const f = e.target.files?.[0];
                               if (!f) return;
@@ -517,7 +621,7 @@ export default function AdminDashboard({
                               handleUploadProgramImage(f, pEditId);
                             }}
                           />
-                          Upload image
+                          {uploadingProgramImage ? "Uploading..." : "Upload image"}
                           <span className="text-xs text-black/45">(jpg/png/webp)</span>
                         </label>
 
@@ -542,7 +646,7 @@ export default function AdminDashboard({
                   </Field>
 
                   <FormActions
-                    busy={busy}
+                    busy={savingProgram}
                     primaryLabel={pEditId ? "Update program" : "Create program"}
                     onCancel={pEditId ? clearProgramForm : undefined}
                   />
@@ -603,21 +707,27 @@ export default function AdminDashboard({
                                 className="text-red-600"
                                 onSelect={async (e) => {
                                   e.preventDefault();
-                                  setBusy(true);
+                                  setDeletingProgramId(p.id);
                                   try {
-                                    await adminDeleteProgram(p.id);
+                                    await withTimeout(
+                                      adminDeleteProgram(p.id),
+                                      15000,
+                                      "Delete timed out. Please try again."
+                                    );
                                     await refreshAll();
+                                    if (!aliveRef.current) return;
                                     if (pEditId === p.id) clearProgramForm();
                                     addToast({ type: "success", message: "Program deleted." });
                                   } catch (err: unknown) {
+                                    if (!aliveRef.current) return;
                                     const msg = getErrorMessage(err, "Delete failed.");
                                     addToast({ type: "error", message: msg });
                                   } finally {
-                                    setBusy(false);
+                                    if (aliveRef.current) setDeletingProgramId(null);
                                   }
                                 }}
                               >
-                                Delete
+                                {deletingProgramId === p.id ? "Deleting..." : "Delete"}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -632,7 +742,7 @@ export default function AdminDashboard({
         ) : null}
 
         {/* Chapters */}
-        {tab === "chapters" ? (
+        {shouldRenderDashboard && tab === "chapters" ? (
           <div className="mt-8 grid gap-6 lg:grid-cols-12">
             <div className="lg:col-span-5">
               <Card className="border-black/10 bg-white p-6 sm:p-8">
@@ -671,7 +781,7 @@ export default function AdminDashboard({
                   </div>
 
                   <FormActions
-                    busy={busy}
+                    busy={savingChapter}
                     primaryLabel={cEditId ? "Update chapter" : "Create chapter"}
                     onCancel={cEditId ? clearChapterForm : undefined}
                   />
@@ -740,21 +850,27 @@ export default function AdminDashboard({
                                 className="text-red-600"
                                 onSelect={async (e) => {
                                   e.preventDefault();
-                                  setBusy(true);
+                                  setDeletingChapterId(c.id);
                                   try {
-                                    await adminDeleteChapter(c.id);
+                                    await withTimeout(
+                                      adminDeleteChapter(c.id),
+                                      15000,
+                                      "Delete timed out. Please try again."
+                                    );
                                     await refreshAll();
+                                    if (!aliveRef.current) return;
                                     if (cEditId === c.id) clearChapterForm();
                                     addToast({ type: "success", message: "Chapter deleted." });
                                   } catch (err: unknown) {
+                                    if (!aliveRef.current) return;
                                     const msg = getErrorMessage(err, "Delete failed.");
                                     addToast({ type: "error", message: msg });
                                   } finally {
-                                    setBusy(false);
+                                    if (aliveRef.current) setDeletingChapterId(null);
                                   }
                                 }}
                               >
-                                Delete
+                                {deletingChapterId === c.id ? "Deleting..." : "Delete"}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -769,7 +885,7 @@ export default function AdminDashboard({
         ) : null}
 
         {/* Opportunities */}
-        {tab === "opportunities" ? (
+        {shouldRenderDashboard && tab === "opportunities" ? (
           <div className="mt-8 grid gap-6 lg:grid-cols-12">
             <div className="lg:col-span-5">
               <Card className="border-black/10 bg-white p-6 sm:p-8">
@@ -810,7 +926,7 @@ export default function AdminDashboard({
                   </Field>
 
                   <FormActions
-                    busy={busy}
+                    busy={savingOpportunity}
                     primaryLabel={oEditId ? "Update opportunity" : "Create opportunity"}
                     onCancel={oEditId ? clearOppForm : undefined}
                   />
@@ -879,21 +995,27 @@ export default function AdminDashboard({
                                 className="text-red-600"
                                 onSelect={async (e) => {
                                   e.preventDefault();
-                                  setBusy(true);
+                                  setDeletingOpportunityId(o.id);
                                   try {
-                                    await deleteOpportunity(o.id);
+                                    await withTimeout(
+                                      deleteOpportunity(o.id),
+                                      15000,
+                                      "Delete timed out. Please try again."
+                                    );
                                     await refreshAll();
+                                    if (!aliveRef.current) return;
                                     if (oEditId === o.id) clearOppForm();
                                     addToast({ type: "success", message: "Opportunity deleted." });
                                   } catch (err: unknown) {
+                                    if (!aliveRef.current) return;
                                     const msg = getErrorMessage(err, "Delete failed.");
                                     addToast({ type: "error", message: msg });
                                   } finally {
-                                    setBusy(false);
+                                    if (aliveRef.current) setDeletingOpportunityId(null);
                                   }
                                 }}
                               >
-                                Delete
+                                {deletingOpportunityId === o.id ? "Deleting..." : "Delete"}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -908,7 +1030,7 @@ export default function AdminDashboard({
         ) : null}
 
         {/* Settings */}
-        {tab === "settings" ? (
+        {shouldRenderDashboard && tab === "settings" ? (
           <div className="mt-8 grid gap-6 lg:grid-cols-12">
             <div className="lg:col-span-7">
               <Card className="border-black/10 bg-white p-6 sm:p-8">
@@ -953,7 +1075,7 @@ export default function AdminDashboard({
                     </Field>
                   </div>
 
-                  <FormActions busy={busy} primaryLabel="Update settings" />
+                  <FormActions busy={savingSettings} primaryLabel="Update settings" />
                 </form>
               </Card>
             </div>

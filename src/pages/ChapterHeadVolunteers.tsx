@@ -12,11 +12,18 @@ import {
   TableRow,
 } from "../components/ui/shadcn/table";
 import { useGsapReveal } from "../hooks/useGsapReveal";
-import { listOpportunities, listVolunteerSignupsByOpportunityIds, type OpportunityRow, type VolunteerSignupRow } from "../lib/admin.api";
+import { withTimeout } from "../lib/async";
+import {
+  listOpportunities,
+  listVolunteerSignupsByOpportunityIds,
+  type OpportunityRow,
+  type VolunteerSignupRow,
+} from "../lib/admin.api";
 import { useAuth } from "../auth/useAuth";
 import { useToast } from "../components/ui/useToast";
 
 type PostgrestLikeError = { message?: string };
+type QueryState = "loading" | "error" | "empty" | "ready";
 
 function getErrorMessage(error: unknown, fallback: string) {
   if (error && typeof error === "object" && "message" in error) {
@@ -29,6 +36,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 export default function ChapterHeadVolunteers() {
   const scope = useRef<HTMLDivElement | null>(null);
+  const aliveRef = useRef(true);
   useGsapReveal(scope);
 
   const { profile } = useAuth();
@@ -37,33 +45,53 @@ export default function ChapterHeadVolunteers() {
 
   const [opportunities, setOpportunities] = useState<OpportunityRow[]>([]);
   const [signups, setSignups] = useState<VolunteerSignupRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [queryState, setQueryState] = useState<QueryState>("loading");
 
   const refresh = useCallback(async () => {
     if (!chapterId) {
+      if (!aliveRef.current) return;
       setOpportunities([]);
       setSignups([]);
-      setLoading(false);
+      setQueryState("empty");
       return;
     }
 
-    setLoading(true);
+    if (aliveRef.current) setQueryState("loading");
+
     try {
-      const chapterOpportunities = await listOpportunities(chapterId);
-      setOpportunities(chapterOpportunities);
-      const chapterSignups = await listVolunteerSignupsByOpportunityIds(
-        chapterOpportunities.map((opportunity) => opportunity.id)
+      const chapterOpportunities = await withTimeout(
+        listOpportunities(chapterId),
+        15000,
+        "Chapter opportunities request timed out. Please try again."
       );
+      if (!aliveRef.current) return;
+
+      setOpportunities(chapterOpportunities);
+      const chapterSignups = await withTimeout(
+        listVolunteerSignupsByOpportunityIds(chapterOpportunities.map((opportunity) => opportunity.id)),
+        15000,
+        "Volunteer signups request timed out. Please try again."
+      );
+      if (!aliveRef.current) return;
+
       setSignups(chapterSignups);
+      setQueryState(chapterSignups.length === 0 ? "empty" : "ready");
     } catch (error: unknown) {
+      if (!aliveRef.current) return;
       addToast({ type: "error", message: getErrorMessage(error, "Failed to load volunteer data.") });
-    } finally {
-      setLoading(false);
+      setQueryState("error");
     }
   }, [addToast, chapterId]);
 
   useEffect(() => {
-    refresh().catch(() => undefined);
+    aliveRef.current = true;
+    const timeoutId = window.setTimeout(() => {
+      refresh().catch(() => undefined);
+    }, 0);
+    return () => {
+      window.clearTimeout(timeoutId);
+      aliveRef.current = false;
+    };
   }, [refresh]);
 
   const uniqueVolunteerCount = useMemo(() => {
@@ -81,7 +109,12 @@ export default function ChapterHeadVolunteers() {
             <div>
               <div className="mt-1 text-2xl font-semibold tracking-tight">Volunteer pipeline</div>
             </div>
-            <Button type="button" variant="outline" onClick={() => refresh().catch(() => undefined)} disabled={loading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => refresh().catch(() => undefined)}
+              disabled={queryState === "loading"}
+            >
               <RefreshCw className="mr-2 h-4 w-4" />
               Refresh
             </Button>
@@ -93,7 +126,9 @@ export default function ChapterHeadVolunteers() {
                 <CardTitle className="text-sm font-medium text-black/65">My Opportunities</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-semibold tabular-nums">{opportunities.length}</div>
+                <div className="text-3xl font-semibold tabular-nums">
+                  {queryState === "error" || queryState === "loading" ? "—" : opportunities.length}
+                </div>
               </CardContent>
             </Card>
             <Card className="rounded-xl border border-black/10 shadow-sm">
@@ -101,7 +136,9 @@ export default function ChapterHeadVolunteers() {
                 <CardTitle className="text-sm font-medium text-black/65">Total Signups</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-semibold tabular-nums">{signups.length}</div>
+                <div className="text-3xl font-semibold tabular-nums">
+                  {queryState === "error" || queryState === "loading" ? "—" : signups.length}
+                </div>
               </CardContent>
             </Card>
             <Card className="rounded-xl border border-black/10 shadow-sm">
@@ -109,7 +146,9 @@ export default function ChapterHeadVolunteers() {
                 <CardTitle className="text-sm font-medium text-black/65">Unique Volunteers</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-semibold tabular-nums">{uniqueVolunteerCount}</div>
+                <div className="text-3xl font-semibold tabular-nums">
+                  {queryState === "error" || queryState === "loading" ? "—" : uniqueVolunteerCount}
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -124,7 +163,33 @@ export default function ChapterHeadVolunteers() {
               <div className="rounded-2xl border border-black/10 bg-[rgb(var(--card))] p-4 text-sm text-black/65">
                 Your account does not have a chapter assigned yet. Ask an admin to set your chapter before reviewing volunteer data.
               </div>
-            ) : (
+            ) : null}
+
+            {chapterId && queryState === "loading" ? (
+              <div className="py-10 text-center text-sm text-black/55">Loading volunteer data...</div>
+            ) : null}
+
+            {chapterId && queryState === "error" ? (
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                <div>Failed to load volunteer data.</div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3"
+                  onClick={() => refresh().catch(() => undefined)}
+                >
+                  Retry
+                </Button>
+              </div>
+            ) : null}
+
+            {chapterId && queryState === "empty" ? (
+              <div className="py-10 text-center text-sm text-black/55">
+                No volunteer signups found for your chapter yet.
+              </div>
+            ) : null}
+
+            {chapterId && queryState === "ready" ? (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -158,16 +223,9 @@ export default function ChapterHeadVolunteers() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {!loading && signups.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="py-10 text-center text-sm text-black/55">
-                        No volunteer signups found for your chapter yet.
-                      </TableCell>
-                    </TableRow>
-                  ) : null}
                 </TableBody>
               </Table>
-            )}
+            ) : null}
           </CardContent>
         </Card>
       </CmsShell>

@@ -35,6 +35,7 @@ import {
 import { Textarea } from "../components/ui/shadcn/textarea";
 import { useAuth } from "../auth/useAuth";
 import { useGsapReveal } from "../hooks/useGsapReveal";
+import { withTimeout } from "../lib/async";
 import {
   createOpportunity,
   deleteOpportunity,
@@ -46,6 +47,7 @@ import {
 import { useToast } from "../components/ui/useToast";
 
 type PostgrestLikeError = { code?: string; message?: string };
+type QueryState = "loading" | "error" | "ready";
 
 function isPostgrestLikeError(error: unknown): error is PostgrestLikeError {
   if (!error || typeof error !== "object") return false;
@@ -97,7 +99,7 @@ function FormActionsBar({
         {busy ? "Saving..." : primaryLabel}
       </Button>
       {onCancel ? (
-        <Button type="button" variant="secondary" onClick={onCancel} disabled={busy}>
+        <Button type="button" variant="secondary" onClick={onCancel}>
           Cancel
         </Button>
       ) : null}
@@ -117,6 +119,7 @@ export default function ChapterHeadDashboard({
   subtitle = "Create and manage volunteer opportunities for your chapter only.",
 }: ChapterHeadDashboardProps) {
   const scope = useRef<HTMLDivElement | null>(null);
+  const aliveRef = useRef(true);
   useGsapReveal(scope);
 
   const { profile } = useAuth();
@@ -124,7 +127,9 @@ export default function ChapterHeadDashboard({
 
   const [opps, setOpps] = useState<OpportunityRow[]>([]);
   const [volunteerCount, setVolunteerCount] = useState(0);
-  const [busy, setBusy] = useState(false);
+  const [queryState, setQueryState] = useState<QueryState>("loading");
+  const [savingOpportunity, setSavingOpportunity] = useState(false);
+  const [deletingOpportunityId, setDeletingOpportunityId] = useState<string | null>(null);
   const [params, setParams] = useSearchParams();
   const { addToast } = useToast();
 
@@ -137,22 +142,47 @@ export default function ChapterHeadDashboard({
 
   const refresh = useCallback(async () => {
     if (!chapterId) {
+      if (!aliveRef.current) return;
       setOpps([]);
       setVolunteerCount(0);
+      setQueryState("ready");
       return;
     }
-    const scoped = await listOpportunities(chapterId);
-    setOpps(scoped);
-    const signups = await listVolunteerSignupsByOpportunityIds(scoped.map((opportunity) => opportunity.id));
-    setVolunteerCount(signups.length);
-  }, [chapterId]);
 
-  useEffect(() => {
-    refresh().catch((e: unknown) => {
+    if (aliveRef.current) setQueryState("loading");
+    try {
+      const scoped = await withTimeout(
+        listOpportunities(chapterId),
+        15000,
+        "Opportunities request timed out. Please try again."
+      );
+      if (!aliveRef.current) return;
+
+      setOpps(scoped);
+      const signups = await withTimeout(
+        listVolunteerSignupsByOpportunityIds(scoped.map((opportunity) => opportunity.id)),
+        15000,
+        "Volunteer signups request timed out. Please try again."
+      );
+      if (!aliveRef.current) return;
+
+      setVolunteerCount(signups.length);
+      setQueryState("ready");
+    } catch (e: unknown) {
+      if (!aliveRef.current) return;
       const msg = getErrorMessage(e, "Failed to load opportunities.");
       addToast({ type: "error", message: msg });
-    });
-  }, [addToast, refresh]);
+      setQueryState("error");
+    }
+  }, [addToast, chapterId]);
+
+  useEffect(() => {
+    aliveRef.current = true;
+    refresh().catch(() => undefined);
+    return () => {
+      aliveRef.current = false;
+    };
+  }, [refresh]);
 
   useEffect(() => {
     if (params.get("signed_in") === "1") {
@@ -172,7 +202,7 @@ export default function ChapterHeadDashboard({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true);
+    setSavingOpportunity(true);
     try {
       if (!chapterId) {
         const msg = "Your account does not have a chapter assigned yet.";
@@ -198,37 +228,47 @@ export default function ChapterHeadDashboard({
         contact_details: contact.trim() || "Contact the chapter head to sign up.",
       };
 
-      if (editId) await updateOpportunity(editId, payload);
-      else await createOpportunity(payload);
+      if (editId) {
+        await withTimeout(updateOpportunity(editId, payload), 15000, "Save timed out. Please try again.");
+      } else {
+        await withTimeout(createOpportunity(payload), 15000, "Save timed out. Please try again.");
+      }
 
+      if (!aliveRef.current) return;
       addToast({
         type: "success",
         message: editId ? "Opportunity updated." : "Opportunity created.",
       });
       await refresh();
+      if (!aliveRef.current) return;
       clearForm();
     } catch (e: unknown) {
+      if (!aliveRef.current) return;
       // If RLS blocks, you'll see it here (correct behavior)
       const msg = getErrorMessage(e, "Save failed.");
       addToast({ type: "error", message: msg });
     } finally {
-      setBusy(false);
+      if (aliveRef.current) setSavingOpportunity(false);
     }
   }
 
   async function runDelete(id: string) {
-    setBusy(true);
+    setDeletingOpportunityId(id);
     try {
-      await deleteOpportunity(id);
+      await withTimeout(deleteOpportunity(id), 15000, "Delete timed out. Please try again.");
       await refresh();
+      if (!aliveRef.current) return;
       if (editId === id) clearForm();
       addToast({ type: "success", message: "Opportunity deleted." });
     } catch (err: unknown) {
+      if (!aliveRef.current) return;
       const msg = getErrorMessage(err, "Delete failed.");
       addToast({ type: "error", message: msg });
     } finally {
-      setBusy(false);
-      setPendingDeleteId(null);
+      if (aliveRef.current) {
+        setDeletingOpportunityId(null);
+        setPendingDeleteId(null);
+      }
     }
   }
 
@@ -262,11 +302,9 @@ export default function ChapterHeadDashboard({
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  refresh().catch((e: unknown) => {
-                    const msg = getErrorMessage(e, "Failed to load opportunities.");
-                    addToast({ type: "error", message: msg });
-                  });
+                  refresh().catch(() => undefined);
                 }}
+                disabled={queryState === "loading"}
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Refresh
@@ -280,21 +318,27 @@ export default function ChapterHeadDashboard({
                 <span>My Opportunities</span>
                 <ListChecks className="h-4 w-4" />
               </div>
-              <div className="mt-2 text-3xl font-semibold tabular-nums">{opps.length}</div>
+              <div className="mt-2 text-3xl font-semibold tabular-nums">
+                {queryState === "ready" ? opps.length : "—"}
+              </div>
             </Card>
             <Card className="rounded-xl border border-black/10 p-4 shadow-sm">
               <div className="flex items-center justify-between text-sm text-black/65">
                 <span>Total Volunteers</span>
                 <Users className="h-4 w-4" />
               </div>
-              <div className="mt-2 text-3xl font-semibold tabular-nums">{volunteerCount}</div>
+              <div className="mt-2 text-3xl font-semibold tabular-nums">
+                {queryState === "ready" ? volunteerCount : "—"}
+              </div>
             </Card>
             <Card className="rounded-xl border border-black/10 p-4 shadow-sm">
               <div className="flex items-center justify-between text-sm text-black/65">
                 <span>Upcoming Events</span>
                 <CalendarClock className="h-4 w-4" />
               </div>
-              <div className="mt-2 text-3xl font-semibold tabular-nums">{upcomingEvents}</div>
+              <div className="mt-2 text-3xl font-semibold tabular-nums">
+                {queryState === "ready" ? upcomingEvents : "—"}
+              </div>
             </Card>
           </div>
         </div>
@@ -325,7 +369,7 @@ export default function ChapterHeadDashboard({
                 </FormField>
 
                 <FormActionsBar
-                  busy={busy}
+                  busy={savingOpportunity}
                   primaryLabel={editId ? "Update" : "Create"}
                   onCancel={editId ? clearForm : undefined}
                 />
@@ -350,71 +394,98 @@ export default function ChapterHeadDashboard({
                 </div>
               </CardHeader>
               <CardContent className="mt-6 p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="w-[54%]">Event</TableHead>
-                      <TableHead className="w-[22%]">Date</TableHead>
-                      <TableHead className="w-[24%] text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {opps.map((o) => (
-                      <TableRow
-                        key={o.id}
-                        className="cursor-pointer"
-                        onClick={() => {
-                          setEditId(o.id);
-                          setName(o.event_name);
-                          setDate(o.event_date);
-                          setSdgs((o.sdgs ?? []).join(", "));
-                          setContact(o.contact_details);
-                        }}
-                      >
-                        <TableCell className="font-semibold">{o.event_name}</TableCell>
-                        <TableCell className="text-black/65 tabular-nums">{o.event_date}</TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onSelect={(e) => {
-                                  e.preventDefault();
-                                  setEditId(o.id);
-                                  setName(o.event_name);
-                                  setDate(o.event_date);
-                                  setSdgs((o.sdgs ?? []).join(", "));
-                                  setContact(o.contact_details);
-                                }}
-                              >
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="text-red-600"
-                                onSelect={(e) => {
-                                  e.preventDefault();
-                                  setPendingDeleteId(o.id);
-                                }}
-                              >
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
+                {queryState === "loading" ? (
+                  <div className="py-10 text-center text-sm text-black/55">Loading opportunities...</div>
+                ) : null}
+
+                {queryState === "error" ? (
+                  <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                    <div>Failed to load opportunities.</div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="mt-3"
+                      onClick={() => refresh().catch(() => undefined)}
+                    >
+                      Retry
+                    </Button>
+                  </div>
+                ) : null}
+
+                {queryState === "ready" ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="w-[54%]">Event</TableHead>
+                        <TableHead className="w-[22%]">Date</TableHead>
+                        <TableHead className="w-[24%] text-right">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {opps.map((o) => (
+                        <TableRow
+                          key={o.id}
+                          className="cursor-pointer"
+                          onClick={() => {
+                            setEditId(o.id);
+                            setName(o.event_name);
+                            setDate(o.event_date);
+                            setSdgs((o.sdgs ?? []).join(", "));
+                            setContact(o.contact_details);
+                          }}
+                        >
+                          <TableCell className="font-semibold">{o.event_name}</TableCell>
+                          <TableCell className="text-black/65 tabular-nums">{o.event_date}</TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onSelect={(e) => {
+                                    e.preventDefault();
+                                    setEditId(o.id);
+                                    setName(o.event_name);
+                                    setDate(o.event_date);
+                                    setSdgs((o.sdgs ?? []).join(", "));
+                                    setContact(o.contact_details);
+                                  }}
+                                >
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-red-600"
+                                  onSelect={(e) => {
+                                    e.preventDefault();
+                                    setPendingDeleteId(o.id);
+                                  }}
+                                >
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {opps.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={3} className="py-10 text-center text-sm text-black/55">
+                            No opportunities found for your chapter yet.
+                          </TableCell>
+                        </TableRow>
+                      ) : null}
+                    </TableBody>
+                  </Table>
+                ) : null}
               </CardContent>
             </Card>
           </div>
@@ -433,8 +504,8 @@ export default function ChapterHeadDashboard({
                 </Button>
               </AlertDialogCancel>
               <AlertDialogAction asChild onClick={() => pendingDeleteId && runDelete(pendingDeleteId)}>
-                <Button type="button" variant="destructive" disabled={busy}>
-                  {busy ? "Deleting..." : "Delete"}
+                <Button type="button" variant="destructive" disabled={deletingOpportunityId === pendingDeleteId}>
+                  {deletingOpportunityId === pendingDeleteId ? "Deleting..." : "Delete"}
                 </Button>
               </AlertDialogAction>
             </AlertDialogFooter>
