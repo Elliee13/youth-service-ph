@@ -28,3 +28,9 @@ This repo uses two CI jobs:
 Result:
 - PRs cannot access service-role secrets.
 - Privileged RLS regression checks run only in trusted contexts with approval.
+
+## CI Orchestration Planning Docs
+
+For the platform-level CI Orchestration API initiative, see:
+- [CI Orchestration API Plan](./CI_ORCHESTRATION_API_PLAN.md)
+- [CI Orchestration API Execution Checklist](./CI_ORCHESTRATION_API_CHECKLIST.md)
