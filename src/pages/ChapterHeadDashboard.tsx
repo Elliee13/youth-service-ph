@@ -47,7 +47,7 @@ import {
 import { useToast } from "../components/ui/useToast";
 
 type PostgrestLikeError = { code?: string; message?: string };
-type QueryState = "loading" | "error" | "ready";
+type QueryState = "loading" | "error" | "missing_scope" | "ready";
 
 function isPostgrestLikeError(error: unknown): error is PostgrestLikeError {
   if (!error || typeof error !== "object") return false;
@@ -145,7 +145,7 @@ export default function ChapterHeadDashboard({
       if (!aliveRef.current) return;
       setOpps([]);
       setVolunteerCount(0);
-      setQueryState("ready");
+      setQueryState("missing_scope");
       return;
     }
 
@@ -375,9 +375,9 @@ export default function ChapterHeadDashboard({
                 />
               </form>
 
-              {!chapterId ? (
+              {queryState === "missing_scope" ? (
                 <div className="mt-6 rounded-2xl border border-black/10 bg-[rgb(var(--card))] p-4 text-sm text-black/65">
-                  Your profile has no chapter assigned. Ask the admin to set your <span className="font-semibold">chapter_id</span>.
+                  Your account does not have a chapter assigned yet. Ask an admin to set your chapter before loading chapter data.
                 </div>
               ) : null}
             </Card>

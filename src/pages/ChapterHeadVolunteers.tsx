@@ -23,7 +23,7 @@ import { useAuth } from "../auth/useAuth";
 import { useToast } from "../components/ui/useToast";
 
 type PostgrestLikeError = { message?: string };
-type QueryState = "loading" | "error" | "empty" | "ready";
+type QueryState = "loading" | "error" | "empty" | "missing_scope" | "ready";
 
 function getErrorMessage(error: unknown, fallback: string) {
   if (error && typeof error === "object" && "message" in error) {
@@ -52,7 +52,7 @@ export default function ChapterHeadVolunteers() {
       if (!aliveRef.current) return;
       setOpportunities([]);
       setSignups([]);
-      setQueryState("empty");
+      setQueryState("missing_scope");
       return;
     }
 
@@ -127,7 +127,7 @@ export default function ChapterHeadVolunteers() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-semibold tabular-nums">
-                  {queryState === "error" || queryState === "loading" ? "—" : opportunities.length}
+                  {queryState === "error" || queryState === "loading" || queryState === "missing_scope" ? "—" : opportunities.length}
                 </div>
               </CardContent>
             </Card>
@@ -137,7 +137,7 @@ export default function ChapterHeadVolunteers() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-semibold tabular-nums">
-                  {queryState === "error" || queryState === "loading" ? "—" : signups.length}
+                  {queryState === "error" || queryState === "loading" || queryState === "missing_scope" ? "—" : signups.length}
                 </div>
               </CardContent>
             </Card>
@@ -147,7 +147,7 @@ export default function ChapterHeadVolunteers() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-semibold tabular-nums">
-                  {queryState === "error" || queryState === "loading" ? "—" : uniqueVolunteerCount}
+                  {queryState === "error" || queryState === "loading" || queryState === "missing_scope" ? "—" : uniqueVolunteerCount}
                 </div>
               </CardContent>
             </Card>
@@ -159,9 +159,9 @@ export default function ChapterHeadVolunteers() {
             <CardTitle className="text-base">Chapter signup log</CardTitle>
           </CardHeader>
           <CardContent>
-            {!chapterId ? (
+            {queryState === "missing_scope" ? (
               <div className="rounded-2xl border border-black/10 bg-[rgb(var(--card))] p-4 text-sm text-black/65">
-                Your account does not have a chapter assigned yet. Ask an admin to set your chapter before reviewing volunteer data.
+                Your account does not have a chapter assigned yet. Ask an admin to set your chapter before loading chapter data.
               </div>
             ) : null}
 

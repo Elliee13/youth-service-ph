@@ -9,6 +9,15 @@ import { useToast } from "../components/ui/useToast";
 
 const GENERIC_SIGNIN_ERROR = "Sign-in failed. Please check your credentials or contact support.";
 
+async function loadProfileWithRetry(userId: string, retries = 1) {
+  try {
+    return await fetchMyProfile(userId);
+  } catch (error) {
+    if (retries <= 0) throw error;
+    return loadProfileWithRetry(userId, retries - 1);
+  }
+}
+
 export default function SignIn() {
   const navigate = useNavigate();
 
@@ -21,13 +30,16 @@ export default function SignIn() {
     e.preventDefault();
     setBusy(true);
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (signInError) throw signInError;
 
-      const profile = await fetchMyProfile();
+      const userId = data.user?.id;
+      if (!userId) throw new Error("Missing authenticated user.");
+
+      const profile = await loadProfileWithRetry(userId);
 
       if (!profile) {
         await supabase.auth.signOut();

@@ -15,7 +15,7 @@ import {
 import { useToast } from "../components/ui/useToast";
 
 type PostgrestLikeError = { message?: string };
-type QueryState = "loading" | "error" | "empty" | "ready";
+type QueryState = "loading" | "error" | "empty" | "missing_scope" | "ready";
 
 function getErrorMessage(error: unknown, fallback: string) {
   if (error && typeof error === "object" && "message" in error) {
@@ -44,7 +44,7 @@ export default function ChapterHeadReports() {
       if (!aliveRef.current) return;
       setOpportunities([]);
       setSignups([]);
-      setQueryState("empty");
+      setQueryState("missing_scope");
       return;
     }
 
@@ -123,7 +123,7 @@ export default function ChapterHeadReports() {
               <CardContent>
                 <div className="flex items-center justify-between">
                   <div className="text-3xl font-semibold tabular-nums">
-                    {queryState === "error" || queryState === "loading" ? "—" : opportunities.length}
+                    {queryState === "error" || queryState === "loading" || queryState === "missing_scope" ? "—" : opportunities.length}
                   </div>
                   <BarChart3 className="h-4 w-4 text-black/45" />
                 </div>
@@ -136,7 +136,7 @@ export default function ChapterHeadReports() {
               <CardContent>
                 <div className="flex items-center justify-between">
                   <div className="text-3xl font-semibold tabular-nums">
-                    {queryState === "error" || queryState === "loading" ? "—" : signups.length}
+                    {queryState === "error" || queryState === "loading" || queryState === "missing_scope" ? "—" : signups.length}
                   </div>
                   <Users className="h-4 w-4 text-black/45" />
                 </div>
@@ -149,7 +149,7 @@ export default function ChapterHeadReports() {
               <CardContent>
                 <div className="flex items-center justify-between">
                   <div className="text-3xl font-semibold tabular-nums">
-                    {queryState === "error" || queryState === "loading" ? "—" : upcomingOpportunityCount}
+                    {queryState === "error" || queryState === "loading" || queryState === "missing_scope" ? "—" : upcomingOpportunityCount}
                   </div>
                   <CalendarClock className="h-4 w-4 text-black/45" />
                 </div>
@@ -178,9 +178,9 @@ export default function ChapterHeadReports() {
               <CardTitle className="text-base">Recent signups</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {!chapterId ? (
+              {queryState === "missing_scope" ? (
                 <div className="rounded-2xl border border-black/10 bg-[rgb(var(--card))] p-4 text-sm text-black/65">
-                  Your account does not have a chapter assigned yet.
+                  Your account does not have a chapter assigned yet. Ask an admin to set your chapter before loading chapter data.
                 </div>
               ) : queryState === "loading" ? (
                 <div className="text-sm text-black/55">Loading reports...</div>

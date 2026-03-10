@@ -19,6 +19,15 @@ function clearPersistedAppKeys() {
   }
 }
 
+async function loadProfileWithRetry(userId: string, retries = 1): Promise<Profile | null> {
+  try {
+    return await fetchMyProfile(userId);
+  } catch (error) {
+    if (retries <= 0) throw error;
+    return loadProfileWithRetry(userId, retries - 1);
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -41,12 +50,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        const p = await fetchMyProfile();
+        const p = await loadProfileWithRetry(nextUser.id);
         if (!shouldUpdate()) return;
         setProfile(p ?? null);
-      } catch {
+      } catch (error) {
         if (!shouldUpdate()) return;
-        setProfile(null);
+        if (import.meta.env.DEV) {
+          console.warn("[AuthProvider] profile sync failed.", error);
+        }
+        setProfile((prev) => (prev?.id === nextUser.id ? prev : null));
       }
     },
     []
@@ -71,10 +83,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const p = await fetchMyProfile();
+      const p = await loadProfileWithRetry(u.id);
       setProfile(p ?? null);
-    } catch {
-      setProfile(null);
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.warn("[AuthProvider] refreshProfile failed.", error);
+      }
+      setProfile((prev) => (prev?.id === u.id ? prev : null));
     }
   }, []);
 
