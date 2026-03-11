@@ -10,6 +10,7 @@ import { useToast } from "../components/ui/useToast";
 
 const FALLBACK_PROGRAM_IMAGE =
   "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=75";
+type QueryState = "loading" | "error" | "empty" | "ready";
 
 function getErrorMessage(error: unknown, fallback: string) {
   if (error && typeof error === "object" && "message" in error) {
@@ -24,6 +25,7 @@ export default function Programs() {
   useGsapReveal(scope);
 
   const [programs, setPrograms] = useState<Program[]>([]);
+  const [queryState, setQueryState] = useState<QueryState>("loading");
   const { addToast } = useToast();
 
   useEffect(() => {
@@ -33,10 +35,12 @@ export default function Programs() {
         const p = await listPrograms();
         if (!alive) return;
         setPrograms(p);
+        setQueryState(p.length === 0 ? "empty" : "ready");
       } catch (e: unknown) {
         if (!alive) return;
         const msg = getErrorMessage(e, "Failed to load programs.");
         addToast({ type: "error", message: msg });
+        setQueryState("error");
       }
     })();
     return () => {
@@ -78,6 +82,31 @@ export default function Programs() {
         eyebrow="Browse"
         title="Find the program that fits your community"
       >
+        {queryState === "loading" ? (
+          <Card className="mb-6 border-black/10 bg-white p-5 text-sm text-black/60">
+            Loading programs...
+          </Card>
+        ) : null}
+
+        {queryState === "error" ? (
+          <Card className="mb-6 border-red-200 bg-red-50 p-5 text-sm text-red-700">
+            <div>Failed to load programs.</div>
+            <button
+              type="button"
+              className="mt-3 text-sm font-semibold underline underline-offset-4"
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </button>
+          </Card>
+        ) : null}
+
+        {queryState === "empty" ? (
+          <Card className="mb-6 border-black/10 bg-white p-5 text-sm text-black/60">
+            No programs available yet.
+          </Card>
+        ) : null}
+
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {programs.map((p) => (
             <Link key={p.id} to={`/programs/${p.id}`} data-reveal>

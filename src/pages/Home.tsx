@@ -23,6 +23,7 @@ const HeroBackground = lazy(() => import("../components/three/HeroBackground"));
 
 const FALLBACK_PROGRAM_IMAGE =
   "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=75";
+type QueryState = "loading" | "partial" | "error" | "ready";
 
 export default function Home() {
   const scope = useRef<HTMLDivElement | null>(null);
@@ -31,6 +32,7 @@ export default function Home() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [programs, setPrograms] = useState<Program[]>([]);
   const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [queryState, setQueryState] = useState<QueryState>("loading");
   const [params, setParams] = useSearchParams();
   const { addToast } = useToast();
 
@@ -46,25 +48,33 @@ export default function Home() {
 
       if (!alive) return;
 
-      if (s.status === "fulfilled") setSettings(s.value);
-      else console.warn("[Home] getSiteSettings failed:", s.reason);
+      let successCount = 0;
 
-      if (p.status === "fulfilled") setPrograms(p.value);
-      else {
+      if (s.status === "fulfilled") {
+        setSettings(s.value);
+        successCount += 1;
+      } else console.warn("[Home] getSiteSettings failed:", s.reason);
+
+      if (p.status === "fulfilled") {
+        setPrograms(p.value);
+        successCount += 1;
+      } else {
         console.warn("[Home] listPrograms failed:", p.reason);
-        setPrograms([]);
       }
 
-      if (c.status === "fulfilled") setChapters(c.value);
-      else {
+      if (c.status === "fulfilled") {
+        setChapters(c.value);
+        successCount += 1;
+      } else {
         console.warn("[Home] listChapters failed:", c.reason);
-        setChapters([]);
       }
 
       if (s.status === "rejected" && p.status === "rejected" && c.status === "rejected") {
         const msg = "Failed to load homepage content. Please refresh.";
         addToast({ type: "error", message: msg });
       }
+
+      setQueryState(successCount === 3 ? "ready" : successCount > 0 ? "partial" : "error");
     })();
 
     return () => {
@@ -92,9 +102,9 @@ export default function Home() {
 
   const stats = useMemo(
     () => ({
-      projects: settings?.projects_count ?? 0,
-      chapters: settings?.chapters_count ?? 0,
-      members: settings?.members_count ?? 0,
+      projects: settings?.projects_count ?? null,
+      chapters: settings?.chapters_count ?? null,
+      members: settings?.members_count ?? null,
     }),
     [settings]
   );
@@ -178,6 +188,31 @@ export default function Home() {
                 <Stat label="Chapters" value={stats.chapters} />
                 <Stat label="Members" value={stats.members} />
               </div>
+
+              {queryState === "partial" ? (
+                <div
+                  data-reveal
+                  className="mx-auto mt-4 max-w-2xl rounded-2xl border border-black/10 bg-white/75 p-4 text-sm text-black/65"
+                >
+                  Some homepage content is temporarily unavailable. Available sections are shown below.
+                </div>
+              ) : null}
+
+              {queryState === "error" ? (
+                <div
+                  data-reveal
+                  className="mx-auto mt-4 max-w-2xl rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+                >
+                  <div>Failed to load homepage content.</div>
+                  <button
+                    type="button"
+                    className="mt-3 text-sm font-semibold text-red-700 underline underline-offset-4"
+                    onClick={() => window.location.reload()}
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : null}
 
             </div>
           </Container>
@@ -271,12 +306,12 @@ export default function Home() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Stat({ label, value }: { label: string; value: number | null }) {
   return (
     <div className="rounded-2xl bg-white/70 p-4">
       <div className="text-[11px] uppercase tracking-[0.16em] text-black/45">{label}</div>
       <div className="mt-2 text-4xl font-semibold tabular-nums tracking-[-0.03em]">
-        {value}
+        {value ?? "—"}
       </div>
     </div>
   );

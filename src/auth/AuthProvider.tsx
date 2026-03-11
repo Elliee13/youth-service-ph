@@ -21,6 +21,9 @@ function clearPersistedAppKeys() {
 
 async function loadProfileWithRetry(userId: string, retries = 1): Promise<Profile | null> {
   try {
+    if (import.meta.env.DEV) {
+      console.warn("[AuthProvider] profile fetch attempt.", { userId, retriesRemaining: retries });
+    }
     return await fetchMyProfile(userId);
   } catch (error) {
     if (retries <= 0) throw error;
@@ -57,6 +60,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!shouldUpdate()) return;
         if (import.meta.env.DEV) {
           console.warn("[AuthProvider] profile sync failed.", error);
+          console.warn("[AuthProvider] preserving previous profile fallback.", {
+            nextUserId: nextUser.id,
+          });
         }
         setProfile((prev) => (prev?.id === nextUser.id ? prev : null));
       }
@@ -88,6 +94,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       if (import.meta.env.DEV) {
         console.warn("[AuthProvider] refreshProfile failed.", error);
+        console.warn("[AuthProvider] preserving previous profile fallback.", {
+          userId: u.id,
+        });
       }
       setProfile((prev) => (prev?.id === u.id ? prev : null));
     }
@@ -110,8 +119,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (typeof window !== "undefined") {
           const currentBuildId = env.appBuildId;
           const storedBuildId = localStorage.getItem(APP_BUILD_ID_KEY);
+          if (import.meta.env.DEV) {
+            console.warn("[AuthProvider] bootstrap build ids.", {
+              currentBuildId,
+              storedBuildId,
+            });
+          }
 
           if (storedBuildId !== currentBuildId) {
+            if (import.meta.env.DEV) {
+              console.warn("[AuthProvider] running build-id invalidation.");
+            }
             try {
               await supabase.auth.signOut();
             } catch {
@@ -123,6 +141,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         const { data } = await supabase.auth.getSession();
+        if (import.meta.env.DEV) {
+          console.warn("[AuthProvider] bootstrap session resolved.", {
+            hasSession: Boolean(data.session),
+            userId: data.session?.user?.id ?? null,
+          });
+        }
         if (!alive) return;
         await syncFromSession(data.session ?? null, () => alive);
       } finally {

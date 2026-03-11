@@ -24,6 +24,7 @@ type GoogleFormCardProps = {
   canOpen: boolean;
   onRequireAuth: () => void;
 };
+type QueryState = "loading" | "error" | "empty" | "ready";
 
 function getErrorMessage(error: unknown, fallback: string) {
   if (error && typeof error === "object" && "message" in error) {
@@ -90,6 +91,7 @@ export default function MembershipChapter() {
   useGsapReveal(scope);
 
   const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [queryState, setQueryState] = useState<QueryState>("loading");
   const [authPromptOpen, setAuthPromptOpen] = useState(false);
   const { user } = useAuth();
   const { addToast } = useToast();
@@ -101,12 +103,13 @@ export default function MembershipChapter() {
         const c = await listChapters();
         if (!alive) return;
         setChapters(c);
+        setQueryState(c.length === 0 ? "empty" : "ready");
       } catch (e: unknown) {
         if (!alive) return;
         console.warn("[MembershipChapter] listChapters failed:", e);
         const msg = getErrorMessage(e, "Failed to load chapters.");
         addToast({ type: "error", message: msg });
-        setChapters([]);
+        setQueryState("error");
       }
     })();
     return () => {
@@ -188,7 +191,20 @@ export default function MembershipChapter() {
             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
               Chapters
             </div>
-            {chapters.length === 0 ? (
+            {queryState === "loading" ? (
+              <div className="mt-4 text-sm text-black/60">Loading chapters...</div>
+            ) : queryState === "error" ? (
+              <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                <div>Failed to load chapters.</div>
+                <button
+                  type="button"
+                  className="mt-3 text-sm font-semibold underline underline-offset-4"
+                  onClick={() => window.location.reload()}
+                >
+                  Retry
+                </button>
+              </div>
+            ) : queryState === "empty" ? (
               <div className="mt-4 text-sm text-black/60">No chapters available yet.</div>
             ) : (
               <div className="mt-4 grid gap-3 sm:grid-cols-2">

@@ -14,6 +14,7 @@ import {
   type PublicUser,
   type VolunteerSignup,
 } from "../lib/public.api";
+type QueryState = "loading" | "error" | "empty" | "ready";
 
 function getErrorMessage(error: unknown, fallback: string) {
   if (error && typeof error === "object" && "message" in error) {
@@ -33,6 +34,7 @@ export default function MyAccount() {
 
   const [publicUser, setPublicUser] = useState<PublicUser | null>(null);
   const [signups, setSignups] = useState<VolunteerSignup[]>([]);
+  const [queryState, setQueryState] = useState<QueryState>("loading");
   const [busy, setBusy] = useState(false);
   const { addToast } = useToast();
 
@@ -56,10 +58,12 @@ export default function MyAccount() {
         setFullName(data?.full_name ?? "");
         setEmail(data?.email ?? user.email ?? "");
         setPhone(data?.phone ?? "");
+        setQueryState(history.length === 0 ? "empty" : "ready");
       } catch (e: unknown) {
         if (!alive) return;
         const msg = getErrorMessage(e, "Failed to load profile.");
         addToast({ type: "error", message: msg });
+        setQueryState("error");
       }
     })();
 
@@ -236,7 +240,22 @@ export default function MyAccount() {
         title="Volunteer signups"
         description="A timeline of your volunteer opportunities."
       >
-        {signups.length === 0 ? (
+        {queryState === "loading" ? (
+          <Card className="border-black/10 bg-white p-5 text-sm text-black/60">
+            Loading signup history...
+          </Card>
+        ) : queryState === "error" ? (
+          <Card className="border-red-200 bg-red-50 p-5 text-sm text-red-700">
+            <div>Failed to load your signup history.</div>
+            <button
+              type="button"
+              className="mt-3 text-sm font-semibold underline underline-offset-4"
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </button>
+          </Card>
+        ) : queryState === "empty" ? (
           <Card className="border-black/10 bg-white p-5 text-sm text-black/60">
             No signups yet. Visit the volunteer opportunities page to get started.
           </Card>

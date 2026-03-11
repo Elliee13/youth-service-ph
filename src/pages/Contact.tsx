@@ -6,6 +6,8 @@ import { useGsapReveal } from "../hooks/useGsapReveal";
 import { getSiteSettings, type SiteSettings } from "../lib/public.api";
 import { useToast } from "../components/ui/useToast";
 
+type QueryState = "loading" | "error" | "ready";
+
 function getErrorMessage(error: unknown, fallback: string) {
   if (error && typeof error === "object" && "message" in error) {
     const message = (error as { message?: unknown }).message;
@@ -19,6 +21,7 @@ export default function Contact() {
   useGsapReveal(scope);
 
   const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [queryState, setQueryState] = useState<QueryState>("loading");
   const { addToast } = useToast();
 
   useEffect(() => {
@@ -28,10 +31,12 @@ export default function Contact() {
         const s = await getSiteSettings();
         if (!alive) return;
         setSettings(s);
+        setQueryState("ready");
       } catch (e: unknown) {
         if (!alive) return;
         const msg = getErrorMessage(e, "Failed to load contact details.");
         addToast({ type: "error", message: msg });
+        setQueryState("error");
       }
     })();
     return () => {
@@ -69,7 +74,6 @@ export default function Contact() {
             >
               Reach out for partnerships, chapter support, or volunteer coordination.
             </p>
-
           </div>
         </Container>
       </section>
@@ -79,6 +83,19 @@ export default function Contact() {
         title="Get in touch"
         description="Intentional, trustworthy presentation of contact channels."
       >
+        {queryState === "error" ? (
+          <Card className="mb-6 border-red-200 bg-red-50 p-5 text-sm text-red-700">
+            <div>Failed to load contact details.</div>
+            <button
+              type="button"
+              className="mt-3 text-sm font-semibold underline underline-offset-4"
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </button>
+          </Card>
+        ) : null}
+
         <div className="grid gap-5 md:grid-cols-3">
           <Card data-reveal className="border-black/10 bg-white p-6 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_50px_rgba(2,6,23,0.10)]">
             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">Email</div>
@@ -87,8 +104,11 @@ export default function Contact() {
               className="mt-3 inline-flex items-center gap-2 text-sm text-[rgb(var(--accent))] hover:underline"
               href={`mailto:${email}`}
             >
-              Send an email <span aria-hidden="true">→</span>
+              Send an email <span aria-hidden="true">&rarr;</span>
             </a>
+            {queryState === "error" ? (
+              <div className="mt-3 text-xs text-red-700">Showing fallback contact details.</div>
+            ) : null}
           </Card>
 
           <Card data-reveal className="border-black/10 bg-white p-6 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_50px_rgba(2,6,23,0.10)]">
@@ -100,8 +120,11 @@ export default function Contact() {
               target="_blank"
               rel="noreferrer"
             >
-              Visit page <span aria-hidden="true">↗</span>
+              Visit page <span aria-hidden="true">&nearr;</span>
             </a>
+            {queryState === "error" ? (
+              <div className="mt-3 text-xs text-red-700">Showing fallback contact details.</div>
+            ) : null}
           </Card>
 
           <Card data-reveal className="border-black/10 bg-white p-6 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_50px_rgba(2,6,23,0.10)]">
@@ -111,8 +134,11 @@ export default function Contact() {
               className="mt-3 inline-flex items-center gap-2 text-sm text-[rgb(var(--accent))] hover:underline"
               href={`tel:${mobile.startsWith("+") ? mobile : "+63" + mobile.replace(/^0/, "")}`}
             >
-              Call now <span aria-hidden="true">→</span>
+              Call now <span aria-hidden="true">&rarr;</span>
             </a>
+            {queryState === "error" ? (
+              <div className="mt-3 text-xs text-red-700">Showing fallback contact details.</div>
+            ) : null}
           </Card>
         </div>
       </Section>
