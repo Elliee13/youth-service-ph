@@ -31,15 +31,33 @@ export default function Programs() {
   useEffect(() => {
     let alive = true;
     (async () => {
+      if (import.meta.env.DEV) {
+        console.warn("[Programs] fetch start.");
+      }
       try {
         const p = await listPrograms();
         if (!alive) return;
         setPrograms(p);
-        setQueryState(p.length === 0 ? "empty" : "ready");
+        const nextQueryState = p.length === 0 ? "empty" : "ready";
+        if (import.meta.env.DEV) {
+          console.warn("[Programs] request outcomes.", {
+            successCount: p.length,
+            errorMessage: null,
+            finalQueryState: nextQueryState,
+          });
+        }
+        setQueryState(nextQueryState);
       } catch (e: unknown) {
         if (!alive) return;
         const msg = getErrorMessage(e, "Failed to load programs.");
         addToast({ type: "error", message: msg });
+        if (import.meta.env.DEV) {
+          console.warn("[Programs] request outcomes.", {
+            successCount: 0,
+            errorMessage: msg,
+            finalQueryState: "error",
+          });
+        }
         setQueryState("error");
       }
     })();

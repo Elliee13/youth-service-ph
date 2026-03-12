@@ -48,6 +48,11 @@ export default function MyAccount() {
 
     let alive = true;
     (async () => {
+      if (import.meta.env.DEV) {
+        console.warn("[MyAccount] fetch start.", {
+          userId: user.id,
+        });
+      }
       try {
         const data = await getMyPublicUser();
         const history = await listMyVolunteerSignups();
@@ -58,11 +63,28 @@ export default function MyAccount() {
         setFullName(data?.full_name ?? "");
         setEmail(data?.email ?? user.email ?? "");
         setPhone(data?.phone ?? "");
-        setQueryState(history.length === 0 ? "empty" : "ready");
+        const nextQueryState = history.length === 0 ? "empty" : "ready";
+        if (import.meta.env.DEV) {
+          console.warn("[MyAccount] request outcomes.", {
+            successCount: history.length,
+            errorMessage: null,
+            finalQueryState: nextQueryState,
+            publicUserFound: Boolean(data),
+          });
+        }
+        setQueryState(nextQueryState);
       } catch (e: unknown) {
         if (!alive) return;
         const msg = getErrorMessage(e, "Failed to load profile.");
         addToast({ type: "error", message: msg });
+        if (import.meta.env.DEV) {
+          console.warn("[MyAccount] request outcomes.", {
+            successCount: 0,
+            errorMessage: msg,
+            finalQueryState: "error",
+            publicUserFound: false,
+          });
+        }
         setQueryState("error");
       }
     })();

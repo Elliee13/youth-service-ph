@@ -40,6 +40,9 @@ export default function Home() {
     let alive = true;
 
     (async () => {
+      if (import.meta.env.DEV) {
+        console.warn("[Home] fetch start.");
+      }
       const [s, p, c] = await Promise.allSettled([
         getSiteSettings(),
         listPrograms(3),
@@ -74,7 +77,27 @@ export default function Home() {
         addToast({ type: "error", message: msg });
       }
 
-      setQueryState(successCount === 3 ? "ready" : successCount > 0 ? "partial" : "error");
+      const nextQueryState = successCount === 3 ? "ready" : successCount > 0 ? "partial" : "error";
+      if (import.meta.env.DEV) {
+        console.warn("[Home] request outcomes.", {
+          settings: s.status === "fulfilled" ? "success" : String(s.reason),
+          programs:
+            p.status === "fulfilled"
+              ? `success:${p.value.length}`
+              : p.reason instanceof Error
+                ? p.reason.message
+                : String(p.reason),
+          chapters:
+            c.status === "fulfilled"
+              ? `success:${c.value.length}`
+              : c.reason instanceof Error
+                ? c.reason.message
+                : String(c.reason),
+          successCount,
+          finalQueryState: nextQueryState,
+        });
+      }
+      setQueryState(nextQueryState);
     })();
 
     return () => {

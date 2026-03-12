@@ -99,16 +99,34 @@ export default function MembershipChapter() {
   useEffect(() => {
     let alive = true;
     (async () => {
+      if (import.meta.env.DEV) {
+        console.warn("[MembershipChapter] fetch start.");
+      }
       try {
         const c = await listChapters();
         if (!alive) return;
         setChapters(c);
-        setQueryState(c.length === 0 ? "empty" : "ready");
+        const nextQueryState = c.length === 0 ? "empty" : "ready";
+        if (import.meta.env.DEV) {
+          console.warn("[MembershipChapter] request outcomes.", {
+            successCount: c.length,
+            errorMessage: null,
+            finalQueryState: nextQueryState,
+          });
+        }
+        setQueryState(nextQueryState);
       } catch (e: unknown) {
         if (!alive) return;
         console.warn("[MembershipChapter] listChapters failed:", e);
         const msg = getErrorMessage(e, "Failed to load chapters.");
         addToast({ type: "error", message: msg });
+        if (import.meta.env.DEV) {
+          console.warn("[MembershipChapter] request outcomes.", {
+            successCount: 0,
+            errorMessage: msg,
+            finalQueryState: "error",
+          });
+        }
         setQueryState("error");
       }
     })();
