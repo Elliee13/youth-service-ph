@@ -3,6 +3,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import { fetchMyProfile } from "../lib/profile.service";
 import { env } from "../lib/env";
+import { withTimeout } from "../lib/async";
 import type { Profile } from "./auth.types";
 import { AuthContext, type AuthState } from "./AuthContext";
 
@@ -19,14 +20,40 @@ function clearPersistedAppKeys() {
   }
 }
 
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function loadProfileWithRetry(userId: string, retries = 1): Promise<Profile | null> {
   try {
     if (import.meta.env.DEV) {
       console.warn("[AuthProvider] profile fetch attempt.", { userId, retriesRemaining: retries });
     }
-    return await fetchMyProfile(userId);
+    const profile = await withTimeout(fetchMyProfile(userId), 15000, "Profile fetch timed out.");
+    if (import.meta.env.DEV) {
+      console.warn("[AuthProvider] profile fetch success.", {
+        userId,
+        profileId: profile?.id ?? null,
+        role: profile?.role ?? null,
+        chapterId: profile?.chapter_id ?? null,
+      });
+    }
+    return profile;
   } catch (error) {
-    if (retries <= 0) throw error;
+    if (import.meta.env.DEV) {
+      console.warn("[AuthProvider] profile fetch retry.", {
+        userId,
+        retriesRemaining: retries,
+        error,
+      });
+    }
+    if (retries <= 0) {
+      if (import.meta.env.DEV) {
+        console.warn("[AuthProvider] profile fetch final failure.", { userId, error });
+      }
+      throw error;
+    }
+    await wait(500);
     return loadProfileWithRetry(userId, retries - 1);
   }
 }
@@ -36,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileRecovering, setProfileRecovering] = useState(false);
   const userRef = useRef<User | null>(null);
 
   const syncFromSession = useCallback(
@@ -48,23 +76,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       userRef.current = nextUser;
 
       if (!nextUser) {
-        if (shouldUpdate()) setProfile(null);
+        if (shouldUpdate()) {
+          setProfile(null);
+          setProfileRecovering(false);
+        }
         return;
       }
 
-      try {
-        const p = await loadProfileWithRetry(nextUser.id);
-        if (!shouldUpdate()) return;
-        setProfile(p ?? null);
-      } catch (error) {
-        if (!shouldUpdate()) return;
-        if (import.meta.env.DEV) {
-          console.warn("[AuthProvider] profile sync failed.", error);
-          console.warn("[AuthProvider] preserving previous profile fallback.", {
-            nextUserId: nextUser.id,
-          });
-        }
-        setProfile((prev) => (prev?.id === nextUser.id ? prev : null));
+      if (shouldUpdate()) {
+        setProfile((prev) => {
+          const nextProfile = prev?.id === nextUser.id ? prev : null;
+          if (import.meta.env.DEV) {
+            console.warn("[AuthProvider] syncFromSession session restored.", {
+              userId: nextUser.id,
+              preservedProfile: Boolean(nextProfile),
+            });
+          }
+          return nextProfile;
+        });
+        setProfileRecovering(true);
       }
     },
     []
@@ -76,6 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       userRef.current = null;
       setProfile(null);
+      setProfileRecovering(false);
       return;
     }
 
@@ -85,12 +116,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!u) {
       setProfile(null);
+      setProfileRecovering(false);
       return;
     }
 
+    setProfileRecovering(true);
     try {
       const p = await loadProfileWithRetry(u.id);
       setProfile(p ?? null);
+      setProfileRecovering(false);
+      if (import.meta.env.DEV) {
+        console.warn("[AuthProvider] refreshProfile final profile result.", {
+          userId: u.id,
+          profileId: p?.id ?? null,
+          role: p?.role ?? null,
+          chapterId: p?.chapter_id ?? null,
+        });
+      }
     } catch (error) {
       if (import.meta.env.DEV) {
         console.warn("[AuthProvider] refreshProfile failed.", error);
@@ -98,7 +140,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           userId: u.id,
         });
       }
-      setProfile((prev) => (prev?.id === u.id ? prev : null));
+      setProfile((prev) => {
+        const nextProfile = prev?.id === u.id ? prev : null;
+        if (import.meta.env.DEV) {
+          console.warn("[AuthProvider] refreshProfile final profile result.", {
+            userId: u.id,
+            profileId: nextProfile?.id ?? null,
+            role: nextProfile?.role ?? null,
+            chapterId: nextProfile?.chapter_id ?? null,
+            fallbackUsed: Boolean(nextProfile),
+          });
+        }
+        return nextProfile;
+      });
+      setProfileRecovering(false);
     }
   }, []);
 
@@ -108,6 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     userRef.current = null;
     setProfile(null);
+    setProfileRecovering(false);
     setLoading(false);
   }, []);
 
@@ -149,6 +205,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         if (!alive) return;
         await syncFromSession(data.session ?? null, () => alive);
+        if (alive && data.session?.user) {
+          void refreshProfile().catch(() => undefined);
+        }
       } finally {
         if (alive) setLoading(false);
       }
@@ -162,6 +221,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         userRef.current = null;
         setProfile(null);
+        setProfileRecovering(false);
         setLoading(false);
         return;
       }
@@ -173,6 +233,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       await syncFromSession(nextSession ?? null, () => alive);
+      if (alive && nextSession?.user) {
+        void refreshProfile().catch(() => undefined);
+      }
       if (alive && shouldBlockRoute) setLoading(false);
     });
 
@@ -180,7 +243,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       alive = false;
       sub.subscription.unsubscribe();
     };
-  }, [syncFromSession]);
+  }, [refreshProfile, syncFromSession]);
 
   const value = useMemo<AuthState>(
     () => ({
@@ -189,10 +252,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       profile,
       role: profile?.role ?? null,
       loading,
+      profileRecovering,
       refreshProfile,
       signOut,
     }),
-    [session, user, profile, loading, refreshProfile, signOut]
+    [session, user, profile, loading, profileRecovering, refreshProfile, signOut]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

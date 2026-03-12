@@ -8,6 +8,7 @@ export type AuthState = {
   profile: Profile | null;
   role: Role | null;
   loading: boolean;
+  profileRecovering: boolean;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 };

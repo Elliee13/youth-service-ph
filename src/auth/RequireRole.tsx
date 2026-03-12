@@ -1,5 +1,6 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
+import { StaffAccessLoading } from "../components/auth/StaffAccessLoading";
 import type { Role } from "./auth.types";
 import { useAuth } from "./useAuth";
 
@@ -12,16 +13,12 @@ export function RequireRole({
   role: Role;
   children: React.ReactNode;
 }) {
-  const { loading, user, profile } = useAuth();
+  const { loading, user, profile, profileRecovering } = useAuth();
   const location = useLocation();
+  const shouldShowRecoveryLoading = Boolean(user) && !profile && profileRecovering;
 
-  if (loading) {
-    return (
-      <div className="py-16">
-        <div className="h-6 w-52 rounded bg-black/5" />
-        <div className="mt-4 h-4 w-80 rounded bg-black/5" />
-      </div>
-    );
+  if (loading || shouldShowRecoveryLoading) {
+    return <StaffAccessLoading />;
   }
 
   if (!user) {

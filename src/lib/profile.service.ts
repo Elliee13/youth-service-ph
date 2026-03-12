@@ -12,12 +12,35 @@ export async function fetchMyProfile(userId?: string): Promise<Profile | null> {
 
   if (!resolvedUserId) return null;
 
+  if (import.meta.env.DEV) {
+    console.warn("[profile.service] query start.", {
+      userId: resolvedUserId,
+    });
+  }
+
   const { data, error } = await supabase
     .from("profiles")
     .select("id, role, chapter_id, created_at")
     .eq("id", resolvedUserId)
     .maybeSingle();
 
-  if (error) throw error;
+  if (error) {
+    if (import.meta.env.DEV) {
+      console.warn("[profile.service] query error.", {
+        userId: resolvedUserId,
+        error,
+      });
+    }
+    throw error;
+  }
+
+  if (import.meta.env.DEV) {
+    console.warn("[profile.service] query success.", {
+      userId: resolvedUserId,
+      profileId: data?.id ?? null,
+      role: data?.role ?? null,
+      chapterId: data?.chapter_id ?? null,
+    });
+  }
   return data as Profile | null;
 }
