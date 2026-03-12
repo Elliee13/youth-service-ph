@@ -39,6 +39,9 @@ export default function AdminVolunteers() {
 
   const refresh = useCallback(async () => {
     if (aliveRef.current) setQueryState("loading");
+    if (import.meta.env.DEV) {
+      console.warn("[AdminVolunteers] refresh start.");
+    }
 
     try {
       const data = await withTimeout(
@@ -49,10 +52,24 @@ export default function AdminVolunteers() {
       if (!aliveRef.current) return;
 
       setSignups(data);
-      setQueryState(data.length === 0 ? "empty" : "ready");
+      const nextQueryState: QueryState = data.length === 0 ? "empty" : "ready";
+      if (import.meta.env.DEV) {
+        console.warn("[AdminVolunteers] refresh settled success.", {
+          successCount: data.length,
+          finalQueryState: nextQueryState,
+        });
+      }
+      setQueryState(nextQueryState);
     } catch (error: unknown) {
       if (!aliveRef.current) return;
-      addToast({ type: "error", message: getErrorMessage(error, "Failed to load volunteer signups.") });
+      const message = getErrorMessage(error, "Failed to load volunteer signups.");
+      addToast({ type: "error", message });
+      if (import.meta.env.DEV) {
+        console.warn("[AdminVolunteers] refresh settled error.", {
+          error: message,
+          finalQueryState: "error",
+        });
+      }
       setQueryState("error");
     }
   }, [addToast]);
@@ -64,6 +81,9 @@ export default function AdminVolunteers() {
     }, 0);
     return () => {
       window.clearTimeout(timeoutId);
+      if (import.meta.env.DEV) {
+        console.warn("[AdminVolunteers] effect aborted/unmounted.");
+      }
       aliveRef.current = false;
     };
   }, [refresh]);

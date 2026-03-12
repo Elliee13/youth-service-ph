@@ -156,6 +156,9 @@ export default function AdminDashboard({
 
   const refreshAll = useCallback(async () => {
     if (aliveRef.current) setQueryState("loading");
+    if (import.meta.env.DEV) {
+      console.warn("[AdminDashboard] refresh start.");
+    }
 
     const sections = await Promise.allSettled([
       withTimeout(adminListPrograms(), 15000, "Programs request timed out. Please try again."),
@@ -209,13 +212,39 @@ export default function AdminDashboard({
       addToast({ type: "error", message: failures[0] });
     }
 
-    setQueryState(successCount > 0 ? "ready" : "error");
+    const nextQueryState: QueryState = successCount > 0 ? "ready" : "error";
+    if (import.meta.env.DEV) {
+      console.warn("[AdminDashboard] refresh settled.", {
+        programs:
+          programsResult.status === "fulfilled"
+            ? `success:${programsResult.value.length}`
+            : getErrorMessage(programsResult.reason, "Failed to load programs."),
+        chapters:
+          chaptersResult.status === "fulfilled"
+            ? `success:${chaptersResult.value.length}`
+            : getErrorMessage(chaptersResult.reason, "Failed to load chapters."),
+        opportunities:
+          opportunitiesResult.status === "fulfilled"
+            ? `success:${opportunitiesResult.value.length}`
+            : getErrorMessage(opportunitiesResult.reason, "Failed to load opportunities."),
+        settings:
+          settingsResult.status === "fulfilled"
+            ? "success"
+            : getErrorMessage(settingsResult.reason, "Failed to load site settings."),
+        successCount,
+        finalQueryState: nextQueryState,
+      });
+    }
+    setQueryState(nextQueryState);
   }, [addToast]);
 
   useEffect(() => {
     aliveRef.current = true;
     refreshAll().catch(() => undefined);
     return () => {
+      if (import.meta.env.DEV) {
+        console.warn("[AdminDashboard] effect aborted/unmounted.");
+      }
       aliveRef.current = false;
     };
   }, [refreshAll]);
