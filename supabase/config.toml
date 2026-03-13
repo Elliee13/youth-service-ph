@@ -1,2 +1,5 @@
 [functions.volunteer-signup]
 verify_jwt = false
+
+[functions.admin-manage-chapter-head]
+verify_jwt = false
