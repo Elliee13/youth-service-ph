@@ -22,6 +22,7 @@ function withSuspense(node: React.ReactNode) {
 }
 
 const Home = lazy(() => import("../pages/Home"));
+const About = lazy(() => import("../pages/About"));
 const Programs = lazy(() => import("../pages/Programs"));
 const ProgramDetail = lazy(() => import("../pages/ProgramDetail"));
 const MembershipChapter = lazy(() => import("../pages/MembershipChapter"));
@@ -31,8 +32,11 @@ const Contact = lazy(() => import("../pages/Contact"));
 const SignIn = lazy(() => import("../pages/SignIn"));
 const Register = lazy(() => import("../pages/Register"));
 const MyAccount = lazy(() => import("../pages/MyAccount"));
+const NotificationsPage = lazy(() => import("../pages/NotificationsPage"));
 const AdminDashboard = lazy(() => import("../pages/AdminDashboard"));
+const AdminStaff = lazy(() => import("../pages/AdminStaff"));
 const AdminVolunteers = lazy(() => import("../pages/AdminVolunteers"));
+const AdminAnnouncements = lazy(() => import("../pages/AdminAnnouncements"));
 const ChapterHeadDashboard = lazy(() => import("../pages/ChapterHeadDashboard"));
 const ChapterHeadVolunteers = lazy(() => import("../pages/ChapterHeadVolunteers"));
 const ChapterHeadReports = lazy(() => import("../pages/ChapterHeadReports"));
@@ -43,6 +47,7 @@ export const router = createBrowserRouter([
     errorElement: <RouteError />,
     children: [
       { path: "/", element: withSuspense(<Home />) },
+      { path: "/about", element: withSuspense(<About />) },
       { path: "/programs", element: withSuspense(<Programs />) },
       { path: "/programs/:id", element: withSuspense(<ProgramDetail />) },
       { path: "/membership-and-chapter", element: withSuspense(<MembershipChapter />) },
@@ -54,6 +59,16 @@ export const router = createBrowserRouter([
       { path: "/sign-in", element: <Navigate to="/staff" replace /> },
       { path: "/register", element: withSuspense(<Register />) },
       { path: "/my-account", element: withSuspense(<MyAccount />) },
+      {
+        path: "/notifications",
+        element: withSuspense(
+          <NotificationsPage
+            surface="public"
+            title="Your notifications"
+            subtitle="Track volunteer applications, announcements, and account updates."
+          />
+        ),
+      },
     ],
   },
   {
@@ -103,6 +118,18 @@ export const router = createBrowserRouter([
         ),
       },
       { path: "volunteers", element: withSuspense(<AdminVolunteers />) },
+      { path: "staff", element: withSuspense(<AdminStaff />) },
+      {
+        path: "notifications",
+        element: withSuspense(
+          <NotificationsPage
+            surface="staff"
+            title="Staff notifications"
+            subtitle="Review approval requests, workflow updates, and announcements."
+          />
+        ),
+      },
+      { path: "announcements", element: withSuspense(<AdminAnnouncements />) },
       {
         path: "settings",
         element: withSuspense(
@@ -139,6 +166,16 @@ export const router = createBrowserRouter([
       },
       { path: "volunteers", element: withSuspense(<ChapterHeadVolunteers />) },
       { path: "reports", element: withSuspense(<ChapterHeadReports />) },
+      {
+        path: "notifications",
+        element: withSuspense(
+          <NotificationsPage
+            surface="staff"
+            title="Chapter notifications"
+            subtitle="Track approvals, volunteer activity, and chapter announcements."
+          />
+        ),
+      },
     ],
   },
 ]);

@@ -7,6 +7,7 @@ import { Separator } from "../ui/shadcn/separator";
 import { PageTransition } from "../motion/PageTransition";
 import { useScrollToTop } from "../../hooks/useScrollToTop";
 import { useAuth } from "../../auth/useAuth";
+import { NotificationBell } from "../notifications/NotificationBell";
 import {
   Dialog,
   DialogContent,
@@ -92,6 +93,8 @@ export function ChapterHeadLayout() {
                 <div className="text-xs uppercase tracking-[0.16em] text-black/45">Staff / Chapter Head</div>
                 <div className="text-sm font-medium text-black/80">{location.pathname}</div>
               </div>
+              <div className="flex items-center gap-2">
+                <NotificationBell />
               <Dialog open={mobileOpen} onOpenChange={setMobileOpen}>
                 <DialogTrigger asChild>
                   <button
@@ -161,6 +164,7 @@ export function ChapterHeadLayout() {
                   </div>
                 </DialogContent>
               </Dialog>
+              </div>
             </div>
           </header>
 

@@ -5,7 +5,9 @@ import {
   FolderKanban,
   LayoutDashboard,
   Menu,
+  Megaphone,
   Settings,
+  ShieldCheck,
   Users,
 } from "lucide-react";
 import { Button } from "../ui/shadcn/button";
@@ -14,6 +16,7 @@ import { Separator } from "../ui/shadcn/separator";
 import { PageTransition } from "../motion/PageTransition";
 import { useScrollToTop } from "../../hooks/useScrollToTop";
 import { useAuth } from "../../auth/useAuth";
+import { NotificationBell } from "../notifications/NotificationBell";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +39,7 @@ const navItems: AdminNavItem[] = [
   { label: "Chapters", icon: Users, to: "/admin/chapters" },
   { label: "Opportunities", icon: CalendarClock, to: "/admin/opportunities" },
   { label: "Volunteers", icon: Users, to: "/admin/volunteers" },
+  { label: "Staff", icon: ShieldCheck, to: "/admin/staff" },
   { label: "Settings", icon: Settings, to: "/admin/settings" },
 ];
 
@@ -97,6 +101,24 @@ export function AdminLayout() {
                 <div className="text-xs uppercase tracking-[0.16em] text-black/45">Staff / Admin</div>
                 <div className="text-sm font-medium text-black/80">{location.pathname}</div>
               </div>
+              <div className="flex items-center gap-2">
+                <NotificationBell />
+                <Link to="/admin/announcements">
+                  <Button type="button" size="sm" className="accent-glow hidden sm:inline-flex">
+                    <Megaphone className="mr-2 h-4 w-4" />
+                    Make announcement
+                  </Button>
+                </Link>
+                <Link to="/admin/announcements">
+                  <Button
+                    type="button"
+                    size="icon"
+                    className="accent-glow sm:hidden"
+                    aria-label="Make announcement"
+                  >
+                    <Megaphone className="h-4 w-4" />
+                  </Button>
+                </Link>
               <Dialog open={mobileOpen} onOpenChange={setMobileOpen}>
                 <DialogTrigger asChild>
                   <button
@@ -166,6 +188,7 @@ export function AdminLayout() {
                   </div>
                 </DialogContent>
               </Dialog>
+              </div>
             </div>
           </header>
 
