@@ -5,7 +5,7 @@ import { Container } from "../components/ui/Container";
 import { useGsapReveal } from "../hooks/useGsapReveal";
 import { Link } from "react-router-dom";
 import { Button } from "../components/ui/Button";
-import { listChapters, type Chapter } from "../lib/public.api";
+import { getSiteSettings, listChapters, type Chapter } from "../lib/public.api";
 import { useToast } from "../components/ui/useToast";
 import { useAuth } from "../auth/useAuth";
 import { AuthRequiredDialog } from "../components/auth/AuthRequiredDialog";
@@ -34,6 +34,30 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+function FormThumbnail({ title }: { title: string }) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-black/10 bg-[rgb(var(--card))] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+      <div className="border-b border-black/10 bg-white/80 px-4 py-3">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
+          Form preview
+        </div>
+        <div className="mt-2 text-sm font-semibold text-black/85">{title}</div>
+      </div>
+      <div className="space-y-3 p-4">
+        <div className="h-3 w-2/3 rounded-full bg-black/8" />
+        <div className="h-10 rounded-xl border border-black/8 bg-white/90" />
+        <div className="h-3 w-1/2 rounded-full bg-black/8" />
+        <div className="h-10 rounded-xl border border-black/8 bg-white/90" />
+        <div className="h-3 w-3/5 rounded-full bg-black/8" />
+        <div className="h-16 rounded-2xl border border-black/8 bg-white/90" />
+        <div className="flex justify-end">
+          <div className="h-9 w-28 rounded-2xl bg-[rgba(255,119,31,0.16)]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function GoogleFormCard({
   title,
   fallbackUrl,
@@ -44,11 +68,9 @@ function GoogleFormCard({
 }: GoogleFormCardProps) {
   return (
     <div className="flex min-h-[320px] flex-col">
-      <div className="text-sm font-semibold">{title}</div>
+      <FormThumbnail title={title} />
+      <div className="mt-5 text-sm font-semibold">{title}</div>
       <p className="mt-3 text-sm leading-6 text-black/65">{description}</p>
-      <div className="mt-5 rounded-2xl border border-black/10 bg-[rgb(var(--card))] p-4 text-sm text-black/65">
-        The application form opens in a new tab so you can complete it without leaving this page.
-      </div>
       <div className="mt-auto pt-6">
         {canOpen ? (
           <a href={fallbackUrl} target="_blank" rel="noreferrer">
@@ -62,26 +84,11 @@ function GoogleFormCard({
           </Button>
         )}
       </div>
-      <p className="mt-4 text-xs text-black/60">
-        {canOpen ? (
-          <>
-            If the form doesn&apos;t load,{" "}
-            <a
-              href={fallbackUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="font-semibold text-[rgb(var(--accent))] hover:underline"
-            >
-              open it here
-            </a>
-            .
-          </>
-        ) : (
-          <>
-            Sign in or create an account first to access the application form.
-          </>
-        )}
-      </p>
+      {!canOpen ? (
+        <p className="mt-4 text-xs text-black/60">
+          Sign in or create an account first to access the application form.
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -93,6 +100,8 @@ export default function MembershipChapter() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [queryState, setQueryState] = useState<QueryState>("loading");
   const [authPromptOpen, setAuthPromptOpen] = useState(false);
+  const [membershipFormUrl, setMembershipFormUrl] = useState(MEMBERSHIP_FORM_FALLBACK_URL);
+  const [chapterFormUrl, setChapterFormUrl] = useState(CHAPTER_FORM_FALLBACK_URL);
   const { user } = useAuth();
   const { addToast } = useToast();
 
@@ -103,14 +112,33 @@ export default function MembershipChapter() {
         console.warn("[MembershipChapter] fetch start.");
       }
       try {
-        const c = await listChapters();
+        const [chaptersResult, settingsResult] = await Promise.allSettled([
+          listChapters(),
+          getSiteSettings(),
+        ]);
         if (!alive) return;
+
+        if (chaptersResult.status === "rejected") {
+          throw chaptersResult.reason;
+        }
+
+        const c = chaptersResult.value;
         setChapters(c);
+        if (settingsResult.status === "fulfilled") {
+          setMembershipFormUrl(settingsResult.value.membership_form_url ?? MEMBERSHIP_FORM_FALLBACK_URL);
+          setChapterFormUrl(
+            settingsResult.value.chapter_proposal_form_url ?? CHAPTER_FORM_FALLBACK_URL
+          );
+        }
+
         const nextQueryState = c.length === 0 ? "empty" : "ready";
         if (import.meta.env.DEV) {
           console.warn("[MembershipChapter] request outcomes.", {
             successCount: c.length,
-            errorMessage: null,
+            errorMessage:
+              settingsResult.status === "rejected"
+                ? getErrorMessage(settingsResult.reason, "Failed to load site settings.")
+                : null,
             finalQueryState: nextQueryState,
           });
         }
@@ -171,7 +199,7 @@ export default function MembershipChapter() {
           <Card data-reveal className="border-black/10 bg-white/70 p-6 sm:p-8">
             <GoogleFormCard
               title="Membership form"
-              fallbackUrl={MEMBERSHIP_FORM_FALLBACK_URL}
+              fallbackUrl={membershipFormUrl}
               description="Fill out the membership application and our team will review your submission."
               buttonLabel="Open Membership Form"
               canOpen={Boolean(user)}
@@ -182,7 +210,7 @@ export default function MembershipChapter() {
           <Card data-reveal className="border-black/10 bg-white/70 p-6 sm:p-8">
             <GoogleFormCard
               title="Chapter proposal form"
-              fallbackUrl={CHAPTER_FORM_FALLBACK_URL}
+              fallbackUrl={chapterFormUrl}
               description="Submit your chapter proposal. We’ll contact you if approved."
               buttonLabel="Open Chapter Proposal Form"
               canOpen={Boolean(user)}
@@ -194,11 +222,11 @@ export default function MembershipChapter() {
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <Card data-reveal className="border-black/10 bg-[rgb(var(--card))] p-6">
             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
-              Note
+              Approval Process
             </div>
-            <div className="mt-3 text-sm font-semibold">Approval notice</div>
-            <p className="mt-2 text-sm leading-6 text-black/65">
-              We will contact you if approved.
+            <p className="mt-3 text-sm leading-6 text-black/65">
+              Qualified applications are reviewed by the team, and we will contact you directly once
+              your membership or chapter proposal is approved.
             </p>
             <div className="mt-5 rounded-2xl border border-black/10 bg-white p-4 text-sm text-black/65">
               Tip: Ensure your contact details are correct so chapter onboarding is smooth.

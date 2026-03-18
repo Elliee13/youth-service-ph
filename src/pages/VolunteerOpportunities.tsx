@@ -15,6 +15,9 @@ import { useAuth } from "../auth/useAuth";
 import { Link } from "react-router-dom";
 import { useToast } from "../components/ui/useToast";
 import { AuthRequiredDialog } from "../components/auth/AuthRequiredDialog";
+import { withTimeout } from "../lib/async";
+
+type QueryState = "loading" | "error" | "empty" | "ready";
 
 function getErrorMessage(error: unknown, fallback: string) {
   if (error && typeof error === "object" && "message" in error) {
@@ -29,6 +32,7 @@ export default function VolunteerOpportunities() {
   useGsapReveal(scope);
 
   const [items, setItems] = useState<VolunteerOpportunity[]>([]);
+  const [queryState, setQueryState] = useState<QueryState>("loading");
   const [mySignups, setMySignups] = useState<VolunteerSignup[]>([]);
   const [authPromptOpen, setAuthPromptOpen] = useState(false);
   const [signUpModal, setSignUpModal] = useState<{
@@ -40,14 +44,21 @@ export default function VolunteerOpportunities() {
   useEffect(() => {
     let alive = true;
     (async () => {
+      if (alive) setQueryState("loading");
       try {
-        const data = await listVolunteerOpportunities();
+        const data = await withTimeout(
+          listVolunteerOpportunities(),
+          15000,
+          "Opportunity request timed out. Please try again."
+        );
         if (!alive) return;
         setItems(data);
+        setQueryState(data.length === 0 ? "empty" : "ready");
       } catch (e: unknown) {
         if (!alive) return;
         const msg = getErrorMessage(e, "Failed to load opportunities.");
         addToast({ type: "error", message: msg });
+        setQueryState("error");
       }
     })();
     return () => {
@@ -127,8 +138,26 @@ export default function VolunteerOpportunities() {
       <Section
         eyebrow="Upcoming"
         title="Volunteer opportunities"
-        description="Card-based layout with clear metadata hierarchy for effortless scanning."
+        description="Browse approved chapter-led opportunities with clear dates, SDGs, and signup details."
       >
+        {queryState === "loading" ? (
+          <div className="rounded-2xl border border-black/10 bg-white p-5 text-sm text-black/60">
+            Loading approved volunteer opportunities...
+          </div>
+        ) : null}
+
+        {queryState === "error" ? (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
+            Failed to load volunteer opportunities. Refresh the page and try again.
+          </div>
+        ) : null}
+
+        {queryState === "empty" ? (
+          <div className="rounded-2xl border border-black/10 bg-white p-5 text-sm text-black/60">
+            No approved volunteer opportunities are available yet. Check back soon for new chapter-led events.
+          </div>
+        ) : null}
+
         <div className="grid gap-5">
           {items.map((o) => (
             <Card

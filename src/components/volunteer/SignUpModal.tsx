@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
-import { Field, Input, Textarea } from "../cms/Field";
+import { Field, Input } from "../cms/Field";
 import { getMyPublicUser, type VolunteerSignupInput } from "../../lib/public.api";
 import { useToast } from "../ui/useToast";
 
@@ -41,7 +41,6 @@ export function SignUpModal({
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [message, setMessage] = useState("");
   const [website, setWebsite] = useState("");
   const [busy, setBusy] = useState(false);
   const { addToast } = useToast();
@@ -78,12 +77,6 @@ export function SignUpModal({
       const normalizedFullName = fullName.trim();
       const normalizedEmail = email.trim().toLowerCase();
       const normalizedPhone = phone.trim();
-      const trimmedMessage = message.trim();
-
-      if (trimmedMessage.length > 1000) {
-        addToast({ type: "error", message: "Message must be 1000 characters or less." });
-        return;
-      }
 
       if (!normalizedFullName || !normalizedEmail || !normalizedPhone) {
         const msg = "Please fill in all required fields.";
@@ -96,7 +89,6 @@ export function SignUpModal({
         full_name: normalizedFullName,
         email: normalizedEmail,
         phone: normalizedPhone,
-        message: trimmedMessage || undefined,
       };
 
       const { signUpForOpportunity } = await import("../../lib/public.api");
@@ -180,16 +172,6 @@ export function SignUpModal({
               required
             />
           </Field>
-
-          <Field label="Message" hint="Optional">
-            <Textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Any additional information or questions..."
-              rows={4}
-            />
-          </Field>
-
           <div className="mt-4 flex flex-wrap gap-3">
             <Button type="submit" className="accent-glow" disabled={busy}>
               {busy ? "Submitting..." : "Sign Up"}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CalendarClock, ListChecks, MoreHorizontal, Plus, RefreshCw, Users } from "lucide-react";
+import { CalendarClock, ListChecks, MoreHorizontal, RefreshCw, Users } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { CmsShell } from "../components/cms/CmsShell";
 import { Button } from "../components/ui/shadcn/button";
@@ -36,6 +36,7 @@ import { Textarea } from "../components/ui/shadcn/textarea";
 import { useAuth } from "../auth/useAuth";
 import { useGsapReveal } from "../hooks/useGsapReveal";
 import { withTimeout } from "../lib/async";
+import { OpportunityStatusBadge } from "../components/opportunities/OpportunityStatusBadge";
 import {
   createOpportunity,
   deleteOpportunity,
@@ -231,13 +232,17 @@ export default function ChapterHeadDashboard({
       if (editId) {
         await withTimeout(updateOpportunity(editId, payload), 15000, "Save timed out. Please try again.");
       } else {
-        await withTimeout(createOpportunity(payload), 15000, "Save timed out. Please try again.");
+        await withTimeout(
+          createOpportunity({ ...payload, approval_status: "pending_approval" }),
+          15000,
+          "Save timed out. Please try again."
+        );
       }
 
       if (!aliveRef.current) return;
       addToast({
         type: "success",
-        message: editId ? "Opportunity updated." : "Opportunity created.",
+        message: editId ? "Opportunity updated." : "Opportunity submitted for admin approval.",
       });
       await refresh();
       if (!aliveRef.current) return;
@@ -277,6 +282,11 @@ export default function ChapterHeadDashboard({
     return opps.filter((o) => o.event_date >= today).length;
   }, [opps]);
 
+  const pendingApprovalCount = useMemo(
+    () => opps.filter((o) => o.approval_status === "pending_approval").length,
+    [opps]
+  );
+
   return (
     <div ref={scope}>
       <CmsShell
@@ -290,14 +300,15 @@ export default function ChapterHeadDashboard({
               <div className="mt-1 text-2xl font-semibold tracking-tight">Operations Overview</div>
               <div className="mt-2 flex items-center gap-2 text-xs text-black/60">
                 <Badge variant="outline">Scoped</Badge>
-                <span>Only your chapter opportunities are editable.</span>
+                {pendingApprovalCount > 0 ? (
+                  <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
+                    {pendingApprovalCount} awaiting approval
+                  </Badge>
+                ) : null}
+                <span>New opportunities stay pending until approved by an admin.</span>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button type="button" variant="secondary" onClick={clearForm}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Opportunity
-              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -347,9 +358,9 @@ export default function ChapterHeadDashboard({
         <div className="mt-8 grid gap-6 lg:grid-cols-12">
           <div className="lg:col-span-5">
             <Card className="border-black/10 bg-white p-6 sm:p-8">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
-                {editId ? "Edit opportunity" : "Create opportunity"}
-              </div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
+                  {editId ? "Edit opportunity" : "Create opportunity"}
+                </div>
 
               <form onSubmit={submit} className="mt-6 grid gap-4">
                 <FormField label="Event name">
@@ -364,7 +375,10 @@ export default function ChapterHeadDashboard({
                   <Input value={sdgs} onChange={(e) => setSdgs(e.target.value)} />
                 </FormField>
 
-                <FormField label="Contact details for sign up">
+                <FormField
+                  label="Contact details for sign up"
+                  hint={!editId ? "New submissions require admin approval before going public" : undefined}
+                >
                   <Textarea value={contact} onChange={(e) => setContact(e.target.value)} />
                 </FormField>
 
@@ -383,14 +397,16 @@ export default function ChapterHeadDashboard({
             </Card>
           </div>
 
-          <div className="lg:col-span-7">
+          <div className="lg:col-span-7 lg:sticky lg:top-24 self-start">
             <Card className="border-black/10 bg-white p-6 sm:p-8">
               <CardHeader className="p-0">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
                   Your chapter opportunities
                 </div>
                 <div className="mt-2 text-sm text-black/65">
-                  Only items for your chapter appear here.
+                  {pendingApprovalCount > 0
+                    ? `${pendingApprovalCount} item${pendingApprovalCount === 1 ? "" : "s"} still awaiting admin approval.`
+                    : "Only items for your chapter appear here, including pending approvals."}
                 </div>
               </CardHeader>
               <CardContent className="mt-6 p-0">
@@ -416,9 +432,10 @@ export default function ChapterHeadDashboard({
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
-                        <TableHead className="w-[54%]">Event</TableHead>
-                        <TableHead className="w-[22%]">Date</TableHead>
-                        <TableHead className="w-[24%] text-right">Actions</TableHead>
+                        <TableHead className="w-[44%]">Event</TableHead>
+                        <TableHead className="w-[20%]">Status</TableHead>
+                        <TableHead className="w-[16%]">Date</TableHead>
+                        <TableHead className="w-[20%] text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -435,6 +452,9 @@ export default function ChapterHeadDashboard({
                           }}
                         >
                           <TableCell className="font-semibold">{o.event_name}</TableCell>
+                          <TableCell>
+                            <OpportunityStatusBadge status={o.approval_status} />
+                          </TableCell>
                           <TableCell className="text-black/65 tabular-nums">{o.event_date}</TableCell>
                           <TableCell className="text-right">
                             <DropdownMenu>
@@ -478,7 +498,7 @@ export default function ChapterHeadDashboard({
                       ))}
                       {opps.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={3} className="py-10 text-center text-sm text-black/55">
+                          <TableCell colSpan={4} className="py-10 text-center text-sm text-black/55">
                             No opportunities found for your chapter yet.
                           </TableCell>
                         </TableRow>

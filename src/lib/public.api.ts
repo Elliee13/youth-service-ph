@@ -7,6 +7,8 @@ export type SiteSettings = {
   contact_email: string;
   contact_facebook: string;
   contact_mobile: string;
+  membership_form_url: string | null;
+  chapter_proposal_form_url: string | null;
 };
 
 export type Program = {
@@ -64,7 +66,9 @@ function logAndThrow(scope: string, error: unknown): never {
 export async function getSiteSettings(): Promise<SiteSettings> {
   const { data, error } = await supabase
     .from("site_settings")
-    .select("projects_count, chapters_count, members_count, contact_email, contact_facebook, contact_mobile")
+    .select(
+      "projects_count, chapters_count, members_count, contact_email, contact_facebook, contact_mobile, membership_form_url, chapter_proposal_form_url"
+    )
     .eq("id", true)
     .single();
 
@@ -113,6 +117,7 @@ export async function listVolunteerOpportunities(limit?: number): Promise<Volunt
   let q = supabase
     .from("volunteer_opportunities")
     .select("id, event_name, event_date, sdgs, contact_details, created_at, chapter:chapters(id, name)")
+    .eq("approval_status", "approved")
     .order("event_date", { ascending: true });
 
   if (limit) q = q.limit(limit);

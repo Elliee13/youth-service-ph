@@ -88,10 +88,6 @@ export default function AdminVolunteers() {
     };
   }, [refresh]);
 
-  const uniqueVolunteers = useMemo(() => {
-    return new Set(signups.map((signup) => signup.email.trim().toLowerCase())).size;
-  }, [signups]);
-
   const upcomingVolunteerCount = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
     return signups.filter((signup) => (signup.opportunity?.event_date ?? "") >= today).length;
@@ -107,7 +103,9 @@ export default function AdminVolunteers() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <div className="text-xs uppercase tracking-[0.16em] text-black/45">Admin / Volunteers</div>
-              <div className="mt-1 text-2xl font-semibold tracking-tight">Volunteer activity</div>
+              <div className="mt-1 text-sm text-black/60">
+                Review recent signup activity across chapters and opportunities.
+              </div>
             </div>
             <Button
               type="button"
@@ -120,7 +118,7 @@ export default function AdminVolunteers() {
             </Button>
           </div>
 
-          <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
             <Card className="rounded-xl border border-black/10 shadow-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-black/65">Total Signups</CardTitle>
@@ -128,16 +126,6 @@ export default function AdminVolunteers() {
               <CardContent>
                 <div className="text-3xl font-semibold tabular-nums">
                   {queryState === "error" || queryState === "loading" ? "—" : signups.length}
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="rounded-xl border border-black/10 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-black/65">Unique Volunteers</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-semibold tabular-nums">
-                  {queryState === "error" || queryState === "loading" ? "—" : uniqueVolunteers}
                 </div>
               </CardContent>
             </Card>
