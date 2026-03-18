@@ -30,7 +30,7 @@ export default function MyAccount() {
 
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, loading, signOut } = useAuth();
 
   const [publicUser, setPublicUser] = useState<PublicUser | null>(null);
   const [signups, setSignups] = useState<VolunteerSignup[]>([]);
@@ -95,10 +95,10 @@ export default function MyAccount() {
   }, [user, profile?.role, addToast]);
 
   useEffect(() => {
-    if (!user) {
+    if (!loading && !user) {
       navigate("/register", { replace: true });
     }
-  }, [user, navigate]);
+  }, [loading, user, navigate]);
 
   useEffect(() => {
     if (params.get("welcome") === "1") {

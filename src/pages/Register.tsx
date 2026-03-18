@@ -81,7 +81,6 @@ export default function Register() {
   async function handleGoogleAuth() {
     setBusy(true);
     try {
-      localStorage.setItem("ysp_auth_notice", "signed_in");
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
